@@ -33,13 +33,13 @@ while 1:
 
  if data["type"] == "evt_precip":
     print ("evt_precip")
-    evt_precip_serial_number = data["serial_number"]   # of the define reporting the data
+    evt_precip_serial_number = data["serial_number"]   # of the device reporting the data
     evt_precip_hub_sn        = data["hub_sn"]
     evt_precip_time_epoch    = data["evt"][0]
 
  elif data["type"] == "evt_strike":
     print ("evt_strike")
-    evt_strike_serial_number = data["serial_number"]   # of the define reporting the data
+    evt_strike_serial_number = data["serial_number"]   # of the device reporting the data
     evt_strike_hub_sn        = data["hub_sn"]
     evt_strike_time_epoch    = data["evt"][0]
     evt_strike_distance      = data["evt"][1]          # km
@@ -47,7 +47,7 @@ while 1:
 
  elif data["type"] == "rapid_wind":
     print ("rapid_wind")
-    rapid_wind_air_serial_number = data["serial_number"]   # of the define reporting the data
+    rapid_wind_air_serial_number = data["serial_number"]   # of the device reporting the data
     rapid_wind_time_epoch        = data["ob"][0]
     rapid_wind_speed             = data["ob"][1]           # meters/second
     rapid_wind_direction         = data["ob"][2]           # degrees
@@ -61,7 +61,7 @@ while 1:
 
  elif data["type"] == "obs_air":
     print ("           obs_air")
-    obs_air_serial_number                 = data["serial_number"]   # of the define reporting the data
+    obs_air_serial_number                 = data["serial_number"]   # of the device reporting the data
     obs_air_hub_sn                        = data["hub_sn"]
     obs_air_time_epoch                    = data["obs"][0][0]
     obs_air_station_pressure              = data["obs"][0][1]        # MB
@@ -75,7 +75,7 @@ while 1:
 
  elif data["type"] == "obs_sky":
     print ("                obs_sky")
-    obs_sky_serial_number                 = data["serial_number"]   # of the define reporting the data
+    obs_sky_serial_number                 = data["serial_number"]   # of the device reporting the data
     obs_sky_hub_sn                        = data["hub_sn"]
     obs_sky_time_epoch                    = data["obs"][0][0]
     obs_sky_illuminance                   = data["obs"][0][1]       # lux
@@ -95,7 +95,7 @@ while 1:
 
  elif data["type"] == "device_status":
     print ("       device_status")
-    device_status_serial_number       = data["serial_number"]       # of the define reporting the data
+    device_status_serial_number       = data["serial_number"]       # of the device reporting the data
     device_status_hub_sn              = data["hub_sn"]
     device_status_timestamp           = data["timestamp"]
     device_status_uptime              = data["uptime"]              # seconds
@@ -120,7 +120,7 @@ while 1:
 
  elif data["type"] == "hub_status":
     print ("hub_status")
-    hub_status_serial_number       = data["serial_number"]      # of the define reporting the data
+    hub_status_serial_number       = data["serial_number"]      # of the device reporting the data
     hub_status_firmware_revision   = data["firmware_revision"]
     hub_status_uptime              = data["uptime"]             # seconds
     hub_status_rssi                = data["rssi"]
