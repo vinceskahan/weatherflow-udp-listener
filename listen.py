@@ -10,18 +10,22 @@ import json
 # weatherflow broadcasts on this port
 MYPORT = 50222
 
+# FQDN of the host to publish mqtt messages to
+mqtt_host = "mqtt"
+
 s = socket(AF_INET, SOCK_DGRAM)
 s.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
 s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 s.bind(('', MYPORT))
 #s.bind(('', 0))
 
+def mqtt_publish(mqtt_host,mqtt_topic):
+    #return     # skip this for now
+    print("    publishing to mqtt://%s/%s" % (mqtt_host, mqtt_topic))
+
 while 1:
  msg=s.recvfrom(1024)
- #print ""
- #print msg[0]
-
- data=json.loads(msg[0])
+ data=json.loads(msg[0])      # this is the JSON payload
 
  # these match https://weatherflow.github.io/SmartWeather/api/udp/v91/
  # in the order shown on that page....
@@ -32,35 +36,46 @@ while 1:
  #
 
  if data["type"] == "evt_precip":
-    print ("evt_precip")
     evt_precip_serial_number = data["serial_number"]   # of the device reporting the data
     evt_precip_hub_sn        = data["hub_sn"]
     evt_precip_time_epoch    = data["evt"][0]
 
+    print ("evt_precip", end='')
+    print (" ts  = " + str(evt_precip_time_epoch), end='')
+    print ('')
+
+    mqtt_publish(mqtt_host,mqtt_topic)
+
  elif data["type"] == "evt_strike":
-    print ("evt_strike")
     evt_strike_serial_number = data["serial_number"]   # of the device reporting the data
     evt_strike_hub_sn        = data["hub_sn"]
     evt_strike_time_epoch    = data["evt"][0]
     evt_strike_distance      = data["evt"][1]          # km
     evt_strike_energy        = data["evt"][2]          # no units documented
 
+    print ("evt_strike", end='')
+    print (" ts  = " + str(evt_strike_time_epoch), end='')
+    print (" distance  = " + str(evt_strike_distance), end='')
+    print (" energy  = " + str(evt_strike_energy), end='')
+    print ('')
+
+    mqtt_publish(mqtt_host,"evt/strike")
+
  elif data["type"] == "rapid_wind":
-    print ("rapid_wind")
     rapid_wind_air_serial_number = data["serial_number"]   # of the device reporting the data
     rapid_wind_time_epoch        = data["ob"][0]
     rapid_wind_speed             = data["ob"][1]           # meters/second
     rapid_wind_direction         = data["ob"][2]           # degrees
 
-    # print ("   rapid_wind", end='')
-    # print (" sn  = " + data["serial_number"], end='')
-    # print (" ts  = " + str(data["ob"][0]), end='')
-    # print (" mps = " + str(data["ob"][1]), end='')
-    # print (" dir = " + str(data["ob"][2]), end='')
-    # print ('')
+    print ("rapid_wind", end='')
+    print (" ts  = " + str(rapid_wind_time_epoch), end='')
+    print (" mps = " + str(rapid_wind_speed), end='')
+    print (" dir = " + str(rapid_wind_direction), end='')
+    print ('')
+
+    mqtt_publish(mqtt_host,"obs/rapid_wind")
 
  elif data["type"] == "obs_air":
-    print ("           obs_air")
     obs_air_serial_number                 = data["serial_number"]   # of the device reporting the data
     obs_air_hub_sn                        = data["hub_sn"]
     obs_air_time_epoch                    = data["obs"][0][0]
@@ -73,14 +88,22 @@ while 1:
     obs_air_report_interval               = data["obs"][0][7]        # minutes
     obs_air_firmware_revision             = data["firmware_revision"]
 
+    print ("obs_air", end='')
+    print (" ts  = " + str(obs_air_time_epoch), end='')
+    print (" station_pressure = " + str(obs_air_station_pressure), end='')
+    print (" temperature = " + str(obs_air_temperature), end='')
+    print (" relative_humidity = " + str(obs_air_relative_humidity), end='')
+    print ('')
+
+    mqtt_publish(mqtt_host,"obs/air")
+
  elif data["type"] == "obs_sky":
-    print ("                obs_sky")
     obs_sky_serial_number                 = data["serial_number"]   # of the device reporting the data
     obs_sky_hub_sn                        = data["hub_sn"]
     obs_sky_time_epoch                    = data["obs"][0][0]
     obs_sky_illuminance                   = data["obs"][0][1]       # lux
     obs_sky_uv                            = data["obs"][0][2]       # index
-    obs_sky_rain_accumulated              = data["obs"][0][3]       # mm
+    obs_sky_rain_accumulated              = data["obs"][0][3]       # mm (in this reporting interval)
     obs_sky_wind_lull                     = data["obs"][0][4]       # meters/second min 3 sec sample
     obs_sky_wind_avg                      = data["obs"][0][5]       # meters/second avg over report interval
     obs_sky_wind_gust                     = data["obs"][0][6]       # meters_second max 3 sec sample
@@ -88,13 +111,24 @@ while 1:
     obs_sky_battery                       = data["obs"][0][8]       # volts
     obs_sky_report_interval               = data["obs"][0][9]       # minutes
     obs_sky_solar_radiation               = data["obs"][0][10]      # W/m^2
-    obs_sky_local_day_rain_accumulation   = data["obs"][0][11]      # mm
+    obs_sky_local_day_rain_accumulation   = data["obs"][0][11]      # mm (does not work in v91 of their firmware)
     obs_sky_precipitation_type            = data["obs"][0][12]      # 0=none, 1=rain, 2=hail
     obs_sky_wind_sample_interval          = data["obs"][0][13]      # seconds
     obs_sky_firmware_revision             = data["firmware_revision"]
 
+    print ("obs_sky", end='')
+    print (" time_epoch  = " + str(obs_sky_time_epoch) ,  end='')
+    print (" uv  = " + str(obs_sky_uv) , end='')
+    print (" rain_accumulated  = " + str(obs_sky_rain_accumulated) , end='')
+    print (" wind_lull = " + str(obs_sky_wind_lull) , end='')
+    print (" wind_avg = " + str(obs_sky_wind_avg) , end='')
+    print (" wind_gust = " + str(obs_sky_wind_gust) , end='')
+    print (" wind_direction = " + str(obs_sky_wind_direction) , end='')
+    print ('')
+
+    mqtt_publish(mqtt_host,"obs/sky")
+
  elif data["type"] == "device_status":
-    print ("       device_status")
     device_status_serial_number       = data["serial_number"]       # of the device reporting the data
     device_status_hub_sn              = data["hub_sn"]
     device_status_timestamp           = data["timestamp"]
@@ -117,6 +151,18 @@ while 1:
     #    0x00000040    sky = wind failed
     #    0x00000080    sky = precip failed
     #    0x00000100    sky = light/uv failed
+
+    print ("device_status")
+
+    # publish to mqtt://mqtt/status/air or status/sky depending on serial_number
+    if "AR-" in device_status_serial_number:
+            device_type = "air"
+    elif "SK-" in device_status_serial_number:
+            device_type = "sky"
+    else:
+            device_type = "unknown_type"
+    topic = "status/" + device_type
+    mqtt_publish(mqtt_host,topic)
 
  elif data["type"] == "hub_status":
     print ("hub_status")
@@ -141,6 +187,7 @@ while 1:
     #   WWD = window watchdog reset
     #   LPW = low-power reset
 
+    mqtt_publish(mqtt_host,"status/hub")
 
  else:
     print ("=> skipping unknown type " + data["type"])
