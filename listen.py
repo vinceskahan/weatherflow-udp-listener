@@ -20,7 +20,7 @@ s.bind(('', MYPORT))
 #s.bind(('', 0))
 
 def mqtt_publish(mqtt_host,mqtt_topic):
-    #return     # skip this for now
+    return     # skip this for now
     print("    publishing to mqtt://%s/%s" % (mqtt_host, mqtt_topic))
 
 while 1:
@@ -152,7 +152,15 @@ while 1:
     #    0x00000080    sky = precip failed
     #    0x00000100    sky = light/uv failed
 
-    print ("device_status")
+    print ("device_status", end='')
+    print (" serial_number  = " + str(device_status_serial_number), end='')
+    print (" ts  = " + str(device_status_timestamp), end='')
+    print (" uptime  = " + str(device_status_uptime), end='')
+    print (" voltage  = " + str(device_status_voltage), end='')
+    print (" firmware_revision  = " + str(device_status_firmware_revision), end='')
+    print (" rssi  = " + str(device_status_rssi), end='')
+    print (" hub_rssi  = " + str(device_status_hub_rssi), end='')
+    print ('')
 
     # publish to mqtt://mqtt/status/air or status/sky depending on serial_number
     if "AR-" in device_status_serial_number:
@@ -186,6 +194,13 @@ while 1:
     #   WDG = watchdog reset
     #   WWD = window watchdog reset
     #   LPW = low-power reset
+
+    print ("hub_status", end='')
+    print (" ts  = " + str(hub_status_timestamp), end='')
+    print (" firmware_revision  = " + str(hub_status_firmware_revision), end='')
+    print (" uptime  = " + str(hub_status_uptime), end='')
+    print (" rssi  = " + str(hub_status_rssi), end='')
+    print ('')
 
     mqtt_publish(mqtt_host,"status/hub")
 
