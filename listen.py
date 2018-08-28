@@ -44,7 +44,7 @@ while 1:
     print (" ts  = " + str(evt_precip_time_epoch), end='')
     print ('')
 
-    mqtt_publish(mqtt_host,mqtt_topic)
+    mqtt_publish(mqtt_host,"weatherflow/evt/precip")
 
  elif data["type"] == "evt_strike":
     evt_strike_serial_number = data["serial_number"]   # of the device reporting the data
@@ -59,7 +59,7 @@ while 1:
     print (" energy  = " + str(evt_strike_energy), end='')
     print ('')
 
-    mqtt_publish(mqtt_host,"evt/strike")
+    mqtt_publish(mqtt_host,"weatherflow/evt/strike")
 
  elif data["type"] == "rapid_wind":
     rapid_wind_air_serial_number = data["serial_number"]   # of the device reporting the data
@@ -73,7 +73,7 @@ while 1:
     print (" dir = " + str(rapid_wind_direction), end='')
     print ('')
 
-    mqtt_publish(mqtt_host,"obs/rapid_wind")
+    mqtt_publish(mqtt_host,"weatherflow/obs/rapid_wind")
 
  elif data["type"] == "obs_air":
     obs_air_serial_number                 = data["serial_number"]   # of the device reporting the data
@@ -95,7 +95,7 @@ while 1:
     print (" relative_humidity = " + str(obs_air_relative_humidity), end='')
     print ('')
 
-    mqtt_publish(mqtt_host,"obs/air")
+    mqtt_publish(mqtt_host,"weatherflow/obs/air")
 
  elif data["type"] == "obs_sky":
     obs_sky_serial_number                 = data["serial_number"]   # of the device reporting the data
@@ -126,7 +126,7 @@ while 1:
     print (" wind_direction = " + str(obs_sky_wind_direction) , end='')
     print ('')
 
-    mqtt_publish(mqtt_host,"obs/sky")
+    mqtt_publish(mqtt_host,"weatherflow/obs/sky")
 
  elif data["type"] == "device_status":
     device_status_serial_number       = data["serial_number"]       # of the device reporting the data
@@ -162,14 +162,14 @@ while 1:
     print (" hub_rssi  = " + str(device_status_hub_rssi), end='')
     print ('')
 
-    # publish to mqtt://mqtt/status/air or status/sky depending on serial_number
+    # both outside devices use the same reporting
     if "AR-" in device_status_serial_number:
             device_type = "air"
     elif "SK-" in device_status_serial_number:
             device_type = "sky"
     else:
             device_type = "unknown_type"
-    topic = "status/" + device_type
+    topic = "weatherflow/status/" + device_type
     mqtt_publish(mqtt_host,topic)
 
  elif data["type"] == "hub_status":
@@ -202,7 +202,7 @@ while 1:
     print (" rssi  = " + str(hub_status_rssi), end='')
     print ('')
 
-    mqtt_publish(mqtt_host,"status/hub")
+    mqtt_publish(mqtt_host,"weatherflow/status/hub")
 
  else:
     print ("=> skipping unknown type " + data["type"])
