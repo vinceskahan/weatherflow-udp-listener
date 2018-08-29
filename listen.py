@@ -1,12 +1,22 @@
 #!/usr/bin/python
 #
-# this matches https://weatherflow.github.io/SmartWeather/api/udp/v91/
-# in the order shown on that page....
+# WeatherFlow listener
 #
-# yes tearing apart the pieces could be done 'cooler' via enumerating
-# a sensor map ala the WeatherflowUDP weewx driver, but lets go for
-# readability # for the time being.....
+#  - this listens for WeatherFlow UDP broadcasts
+#    and prints the decoded info to standard out (optionally)
+#    or publishes the decoded data to MQTT (also optionally)
 #
+#
+#----------------
+#
+#  usage: listen.py [-h] [--mqtt] [--stdout]
+#
+#  optional arguments:
+#    -h, --help    show this help message and exit
+#    --mqtt, -m    publish to MQTT
+#    --stdout, -s  print to stdout
+#
+#----------------
 
 from __future__ import print_function
 
@@ -235,13 +245,22 @@ if __name__ == "__main__":
         msg=s.recvfrom(1024)
         data=json.loads(msg[0])      # this is the JSON payload
 
-        if   data["type"] == "rapid_wind":    process_rapid_wind(data)
+        #
+        # this matches https://weatherflow.github.io/SmartWeather/api/udp/v91/
+        # in the order shown on that page....
+        #
+        # yes tearing apart the pieces could be done 'cooler' via enumerating
+        # a sensor map ala the WeatherflowUDP weewx driver, but lets go for
+        # readability # for the time being.....
+        #
+
+        if   data["type"] == "evt_strike":    process_evt_strike(data)
+        elif data["type"] == "evt_precip":    process_evt_precip(data)
+        elif data["type"] == "rapid_wind":    process_rapid_wind(data)
         elif data["type"] == "obs_air":       process_obs_air(data)
         elif data["type"] == "obs_sky":       process_obs_sky(data)
         elif data["type"] == "device_status": process_device_status(data)
         elif data["type"] == "hub_status":    process_hub_status(data)
-        elif data["type"] == "evt_strike":    process_evt_strike(data)
-        elif data["type"] == "evt_precip":    process_evt_precip(data)
         else:
            print ("ERROR: unknown data['type'] in", data)
 
