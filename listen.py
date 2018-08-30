@@ -8,14 +8,15 @@
 #
 #----------------
 #
-#  usage: listen.py [-h] [--mqtt] [--stdout]
+# usage: listen.py [-h] [--mqtt] [--stdout] [--no_pub] [--weewx] [--debug]
 #
-#  optional arguments:
-#    -h, --help    show this help message and exit
-#    --mqtt, -m    publish to MQTT
-#    --stdout, -s  print to stdout
-#    --debug, -d   debug only - do not publish to MQTT
-#    --weewx, -w   convert to weewx schema mapping
+# optional arguments:
+#   -h, --help    show this help message and exit
+#   --debug, -d   print debug UDP data to stdout
+#   --stdout, -s  print decoded data to stdout
+#   --mqtt, -m    publish to MQTT
+#   --no_pub, -n  report but do not publish to MQTT
+#   --weewx, -w   convert to weewx schema mapping
 #
 #----------------
 
@@ -156,7 +157,7 @@ def process_device_status(data):
     device_status_rssi                = data["rssi"]
     device_status_hub_rssi            = data["hub_rssi"]
     device_status_sensor_status       = data["sensor_status"]
-    device_status_debug               = data["debug"]               # 0=disabled, 1=enabled
+    device_status_debug               = data["debug"]                # 0=disabled, 1=enabled
 
     # sensor_status is an encoded enumeration
     #    0x00000000    all = sensors ok
@@ -279,7 +280,7 @@ def mqtt_publish(mqtt_host,mqtt_topic,data):
     if args.stdout:
         print ("    publishing to mqtt://%s/%s" % (mqtt_host, mqtt_topic))
 
-    if not args.debug:
+    if not args.no_pub:
         broker_address=mqtt_host
         client_id=MQTT_CLIENT_ID
         topic=mqtt_topic
@@ -303,14 +304,15 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("--debug",  "-d", dest="debug",  action="store_true", help="print debug data to stdout")
+    parser.add_argument("--stdout", "-s", dest="stdout", action="store_true", help="print decoded data to stdout")
     parser.add_argument("--mqtt",   "-m", dest="mqtt",   action="store_true", help="publish to MQTT")
-    parser.add_argument("--stdout", "-s", dest="stdout", action="store_true", help="print to stdout")
-    parser.add_argument("--debug",  "-d", dest="debug",  action="store_true", help="debug only - do not publish to MQTT")
+    parser.add_argument("--no_pub", "-n", dest="no_pub", action="store_true", help="report but do not publish to MQTT")
     parser.add_argument("--weewx",  "-w", dest="weewx",  action="store_true", help="convert to weewx schema mapping")
 
     args = parser.parse_args()
 
-    if (not args.mqtt) and (not args.stdout) and (not args.weewx):
+    if (not args.mqtt) and (not args.stdout) and (not args.weewx) and (not args.debug):
         print ("\n# exiting - must specify at least one option")
         parser.print_usage()
         print ()
@@ -327,6 +329,10 @@ if __name__ == "__main__":
     while 1:
         msg=s.recvfrom(1024)
         data=json.loads(msg[0])      # this is the JSON payload
+
+        if args.debug:
+            print (json.dumps(data,sort_keys=True));
+            next
 
         # initialize weewx keys in data
         if args.weewx:
