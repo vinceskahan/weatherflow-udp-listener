@@ -15,10 +15,13 @@
 #    -h, --help    show this help message and exit
 #    --mqtt, -m    publish to MQTT
 #    --stdout, -s  print to stdout
+#    --debug, -d   debug only - do not publish to MQTT
 #
 #----------------
 
 from __future__ import print_function
+import paho.mqtt.client  as mqtt
+import paho.mqtt.publish as publish
 
 import sys, time
 from socket import *
@@ -28,7 +31,9 @@ import json
 MYPORT = 50222
 
 # FQDN of the host to publish mqtt messages to
-mqtt_host = "mqtt"
+MQTT_HOST = "mqtt"
+MQTT_PORT = 1883
+MQTT_CLIENT_ID = "weatherflow"
 
 def process_rapid_wind(data):
     rapid_wind_air_serial_number = data["serial_number"]   # of the device reporting the data
@@ -44,7 +49,7 @@ def process_rapid_wind(data):
         print ('')
 
     if args.mqtt:
-        mqtt_publish(mqtt_host,"weatherflow/rapid_wind")
+        mqtt_publish(MQTT_HOST,"wf/rapid_wind",data)
 
 def process_obs_air(data):
     obs_air_serial_number                 = data["serial_number"]   # of the device reporting the data
@@ -68,7 +73,7 @@ def process_obs_air(data):
         print ('')
 
     if args.mqtt:
-        mqtt_publish(mqtt_host,"weatherflow/obs/air")
+        mqtt_publish(MQTT_HOST,"wf/obs/air",data)
 
 def process_obs_sky(data):
     obs_sky_serial_number                 = data["serial_number"]   # of the device reporting the data
@@ -101,7 +106,7 @@ def process_obs_sky(data):
         print ('')
 
     if args.mqtt:
-        mqtt_publish(mqtt_host,"weatherflow/obs/sky")
+        mqtt_publish(MQTT_HOST,"wf/obs/sky",data)
 
 def process_device_status(data):   
     device_status_serial_number       = data["serial_number"]       # of the device reporting the data
@@ -145,9 +150,9 @@ def process_device_status(data):
             device_type = "sky"
     else:
             device_type = "unknown_type"
-    topic = "weatherflow/status/" + device_type
+    topic = "wf/status/" + device_type
     if args.mqtt:
-        mqtt_publish(mqtt_host,topic)
+        mqtt_publish(MQTT_HOST,topic,data)
 
 def process_hub_status(data):
     hub_status_serial_number       = data["serial_number"]      # of the device reporting the data
@@ -180,7 +185,7 @@ def process_hub_status(data):
         print ('')
 
     if args.mqtt:
-        mqtt_publish(mqtt_host,"weatherflow/status/hub")
+        mqtt_publish(MQTT_HOST,"wf/status/hub",data)
 
 def process_evt_strike(data):
     evt_strike_serial_number = data["serial_number"]   # of the device reporting the data
@@ -197,7 +202,7 @@ def process_evt_strike(data):
         print ('')
 
     if args.mqtt:
-        mqtt_publish(mqtt_host,"weatherflow/evt/strike")
+        mqtt_publish(MQTT_HOST,"wf/evt/strike",data)
 
 def process_evt_precip(data):
     evt_precip_serial_number = data["serial_number"]   # of the device reporting the data
@@ -210,11 +215,29 @@ def process_evt_precip(data):
         print ('')
 
     if args.mqtt:
-        mqtt_publish(mqtt_host,"weatherflow/evt/precip")
+        mqtt_publish(MQTT_HOST,"wf/evt/precip",data)
 
-# this is a placeholder for now
-def mqtt_publish(mqtt_host,mqtt_topic):
-    print("    publishing to mqtt://%s/%s" % (mqtt_host, mqtt_topic))
+
+def mqtt_publish(mqtt_host,mqtt_topic,data):
+    print ("    publishing to mqtt://%s/%s" % (mqtt_host, mqtt_topic))
+
+    if not args.debug:
+        broker_address=mqtt_host
+        client_id=MQTT_CLIENT_ID
+        topic=mqtt_topic
+        payload=json.dumps(data,sort_keys=True)
+        port=MQTT_PORT
+
+        # ref: https://www.eclipse.org/paho/clients/python/docs/#single
+        publish.single(
+            topic,
+            payload=payload,
+            hostname=broker_address,
+            client_id=client_id,
+            port=port,
+            protocol=mqtt.MQTTv311)
+
+    return
 
 
 if __name__ == "__main__":
@@ -222,8 +245,9 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mqtt",   "-m", dest="mqtt", action="store_true", help="publish to MQTT")
+    parser.add_argument("--mqtt",   "-m", dest="mqtt",   action="store_true", help="publish to MQTT")
     parser.add_argument("--stdout", "-s", dest="stdout", action="store_true", help="print to stdout")
+    parser.add_argument("--debug",  "-d", dest="debug",  action="store_true", help="debug only - do not publish to MQTT")
 
     args = parser.parse_args()
 
