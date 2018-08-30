@@ -120,7 +120,7 @@ def process_device_status(data):
     device_status_sensor_status       = data["sensor_status"]
     device_status_debug               = data["debug"]               # 0=disabled, 1=enabled
 
-    # sensor_status is an encored enumeration
+    # sensor_status is an encoded enumeration
     #    0x00000000    all = sensors ok
     #    0x00000001    air = lightning failed
     #    0x00000002    air = lightning noise
