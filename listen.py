@@ -12,8 +12,9 @@
 #
 # optional arguments:
 #   -h, --help    show this help message and exit
-#   --debug, -d   print debug UDP data to stdout
 #   --stdout, -s  print decoded data to stdout
+#   --debug, -d   print debug UDP data to stdout
+#   --indent, -i  indent debug UDP to stdout (requires -d)
 #   --mqtt, -m    publish to MQTT
 #   --no_pub, -n  report but do not publish to MQTT
 #   --weewx, -w   convert to weewx schema mapping
@@ -308,11 +309,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--debug",  "-d", dest="debug",  action="store_true", help="print debug data to stdout")
     parser.add_argument("--stdout", "-s", dest="stdout", action="store_true", help="print decoded data to stdout")
+    parser.add_argument("--indent", "-i", dest="indent", action="store_true", help="indent debug UDP to stdout (requires -d)")
     parser.add_argument("--mqtt",   "-m", dest="mqtt",   action="store_true", help="publish to MQTT")
     parser.add_argument("--no_pub", "-n", dest="no_pub", action="store_true", help="report but do not publish to MQTT")
     parser.add_argument("--weewx",  "-w", dest="weewx",  action="store_true", help="convert to weewx schema mapping")
 
     args = parser.parse_args()
+
+    if (args.indent) and (not args.debug):
+        print ("\n# exiting - must also specify --debug")
+        parser.print_usage()
+        print ()
+        sys.exit(1)
 
     if (not args.mqtt) and (not args.stdout) and (not args.weewx) and (not args.debug):
         print ("\n# exiting - must specify at least one option")
@@ -333,7 +341,11 @@ if __name__ == "__main__":
         data=json.loads(msg[0])      # this is the JSON payload
 
         if args.debug:
-            print (json.dumps(data,sort_keys=True));
+            if args.indent:
+                print ("###################################")
+                print (json.dumps(data,sort_keys=True,indent=2));
+            else:
+                print (json.dumps(data,sort_keys=True));
             next
 
         # initialize weewx keys in data
