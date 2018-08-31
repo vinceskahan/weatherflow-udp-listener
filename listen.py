@@ -89,6 +89,8 @@ def process_obs_air(data):
         print (" station_pressure = " + str(obs_air_station_pressure), end='')
         print (" temperature = " + str(obs_air_temperature), end='')
         print (" relative_humidity = " + str(obs_air_relative_humidity), end='')
+        print (" lightning_strikes = " + str(obs_air_lightning_strike_count), end='')
+        print (" lightning_avg_km  = " + str(obs_air_lightning_strike_avg_distance), end='')
         print ('')
 
     if args.mqtt:
