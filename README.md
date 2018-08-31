@@ -29,6 +29,8 @@ optional arguments:
 
 ## Typical Usage
 
+### Generating MQTT topics for other systems to subscribe to
+
 Typically it is expected that this script would be used to generate MQTT publish messages via running as daemon ala:
 
 ```
@@ -36,12 +38,9 @@ Typically it is expected that this script would be used to generate MQTT publish
 nohup python listen.py --mqtt [--weewx] &
 
 
-```
-
-
 ## Examples
 
-### --debug option
+### Debugging your WeatherFlow hub, sky, and air
 
 The --debug option prints out decoded UDP broadcasts in JSON format to stdout...
 
@@ -54,7 +53,7 @@ listening for broadcasts..
 
 ```
 
-### --debug --indent
+### Making the --debug output more user-friendly
 
 Adding the --indent option reformats the output to be a little more readable...
 
@@ -89,9 +88,9 @@ listening for broadcasts..
 ```
 
 
-### --mqtt --stdout option
+### Publishing to MQTT
 
-The --mqtt option publishes to MQTT. In this example we also add the --stdout option to get more info of what it's decoding and publishing...
+The --mqtt option publishes to MQTT. In this example we also add the --stdout option to get more info of what it's decoding and publishing for illustrative purposes below...
 
 ```
 
@@ -109,9 +108,9 @@ rapid_wind     =>  ts  = 1535684275 mps = 0.72 dir = 254
 
 ```
 
-### --weewx option
+### Decoding WeatherFlow data into WeeWX terminology
 
-The --weewx option maps WeatherFlow variable names to WeeWX-compatible parameter names, matching the WeeWX schema.  In this example we add --stdout to get more info os what it's decoding and what JSON content was generated.
+The --weewx option maps WeatherFlow variable names to WeeWX-compatible parameter names, matching the WeeWX schema. Again, in this example we add the --stdout option to get more info of what it's decoding for illustrative purposes below... 
 
 ```
 
@@ -124,7 +123,7 @@ obs_sky        =>  time_epoch  = 1535684549 uv  = 0.02 rain_accumulated  = 0.0 w
 
 ### --weewx --mqtt --stdout
 
-Similar to the examples above, adding the --mqtt option publishes to MQTT.  Again, in this example we add --stdout to show what is being published and to which MQTT topic.
+Similar to the examples above, adding the --mqtt option 'also' publishes to MQTT.  Again, in this example we add --stdout to show what is being published and to which MQTT topic.
 
 ```
 pi@zero:~ $ python listen.py --weewx --mqtt --stdout
@@ -138,6 +137,9 @@ obs_air        =>  ts  = 1535684899 station_pressure = 1006.8 temperature = 18.8
 ## Subscribing to MQTT published topics
 
 ### WeatherFlow MQTT topics (non-weewx format)
+
+This gives an example of how to use the mosquitto_sub MQTT client to subscribe to a published topic.   See the mosquito_sub man page for detailed usage of that client.
+
 ```
 
 pi@zero$ mosquitto_sub -t "wf/obs/#" -h mqtt
@@ -149,6 +151,10 @@ pi@zero$ mosquitto_sub -t "wf/obs/#" -h mqtt
 ```
 
 ### WeatherFlow MQTT topics (weewx format)
+
+If the listener is publishing with the --weewx option specified, all the weewx-compatible topics are on the same MQTT topic for easy subscribing...
+
+
 ```
 
 pi@zero$ mosquitto_sub -t "wf/weewx" -h mqtt
