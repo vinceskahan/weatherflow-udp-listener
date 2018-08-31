@@ -12,18 +12,23 @@ This is a quick listener for the WeatherFlow UDP broadcasts that can:
 
 ```
 
-pi@zero:~ $ python listen.py --help
-usage: listen.py [-h] [--debug] [--stdout] [--indent] [--mqtt] [--no_pub]
-                 [--weewx]
+Usage: listen.py [-h] [--debug] [--stdout] [--indent] [--mqtt] [--no_pub]
+                 [--weewx] [--limit LIMIT]
 
 optional arguments:
-  -h, --help    show this help message and exit
-  --debug, -d   print debug data to stdout
-  --stdout, -s  print decoded data to stdout
-  --indent, -i  indent debug UDP to stdout (requires -d)
-  --mqtt, -m    publish to MQTT
-  --no_pub, -n  report but do not publish to MQTT
-  --weewx, -w   convert to weewx schema mapping
+  -h, --help            show this help message and exit
+  --debug, -d           print debug data to stdout
+  --stdout, -s          print decoded data to stdout
+  --indent, -i          indent debug UDP to stdout (requires -d)
+  --mqtt, -m            publish to MQTT
+  --no_pub, -n          report but do not publish to MQTT
+  --weewx, -w           convert to weewx schema mapping
+  --limit LIMIT, -l LIMIT
+                        limit to one obs type
+
+for --limit, possibilities are:
+   rapid_wind, obs_sky, obs_air,
+   status_hub, device_status, evt_precip, evt_strike
 
 ```
 
@@ -54,6 +59,7 @@ listening for broadcasts..
 
 ```
 
+Adding the '--limit type' option limits the output to just one type of event/status/observation.
 
 Adding the --indent option reformats the output to be a little more readable...
 
