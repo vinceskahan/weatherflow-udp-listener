@@ -37,6 +37,7 @@ Typically it is expected that this script would be used to generate MQTT publish
 
 nohup python listen.py --mqtt [--weewx] &
 
+```
 
 ## Examples
 
