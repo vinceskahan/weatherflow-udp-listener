@@ -118,7 +118,7 @@ def process_obs_sky(data):
     obs_sky["battery"]                     = data["obs"][0][8]       # volts
     obs_sky["report_interval"]             = data["obs"][0][9]       # minutes
     obs_sky["solar_radiation"]             = data["obs"][0][10]      # W/m^2
-    obs_sky["local_day_rain_accumulation"] = data["obs"][0][11]      # mm (does not work in v91 of their firmware)
+                                                                     # local_rain_day_accumulation does not work in v91 of their firmware
     obs_sky["precipitation_type"]          = data["obs"][0][12]      # 0=none, 1=rain, 2=hail
     obs_sky["wind_sample_interval"]        = data["obs"][0][13]      # seconds
     obs_sky["firmware_revision"]           = data["firmware_revision"]
