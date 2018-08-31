@@ -42,6 +42,8 @@ MQTT_PORT = 1883
 MQTT_CLIENT_ID = "weatherflow"
 
 def process_rapid_wind(data):
+    if args.limit and args.limit != "rapid_wind": return
+
     rapid_wind = {}
     rapid_wind['timestamp']  = data["ob"][0]
     rapid_wind['speed']      = data["ob"][1]           # meters/second
@@ -69,6 +71,8 @@ def process_rapid_wind(data):
     return data
 
 def process_obs_air(data):
+    if args.limit and args.limit != "obs_air": return
+
     obs_air = {}
     obs_air["timestamp"]                     = data["obs"][0][0]
     obs_air["station_pressure"]              = data["obs"][0][1]        # MB
@@ -106,6 +110,8 @@ def process_obs_air(data):
     return data
 
 def process_obs_sky(data):
+    if args.limit and args.limit != "obs_sky": return
+
     obs_sky = {}
     obs_sky["timestamp"]                   = data["obs"][0][0]
     obs_sky["illuminance"]                 = data["obs"][0][1]       # lux
@@ -153,6 +159,7 @@ def process_obs_sky(data):
     return data
 
 def process_device_status(data):
+    if args.limit and args.limit != "device_status": return
 
     # both outside devices use the same status schema
     if "AR-" in data["serial_number"]:
@@ -207,6 +214,8 @@ def process_device_status(data):
     return data
 
 def process_hub_status(data):
+    if args.limit and args.limit != "hub_status": return
+
     hub_status = {}
     hub_status["device"]              = "hub"
     hub_status["firmware_revision"]   = data["firmware_revision"]
@@ -267,6 +276,8 @@ def process_evt_strike(data):
     return data
 
 def process_evt_precip(data):
+    if args.limit and args.limit != "evt_precip": return
+
     evt_precip = {}
     evt_precip["timestamp"] = data["evt"][0]
 
@@ -311,13 +322,22 @@ if __name__ == "__main__":
 
     import argparse
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+for --limit, possibilities are:
+   rapid_wind, obs_sky, obs_air,
+   status_hub, device_status, evt_precip, evt_strike
+       """,
+    )
+
     parser.add_argument("--debug",  "-d", dest="debug",  action="store_true", help="print debug data to stdout")
     parser.add_argument("--stdout", "-s", dest="stdout", action="store_true", help="print decoded data to stdout")
     parser.add_argument("--indent", "-i", dest="indent", action="store_true", help="indent debug UDP to stdout (requires -d)")
     parser.add_argument("--mqtt",   "-m", dest="mqtt",   action="store_true", help="publish to MQTT")
     parser.add_argument("--no_pub", "-n", dest="no_pub", action="store_true", help="report but do not publish to MQTT")
     parser.add_argument("--weewx",  "-w", dest="weewx",  action="store_true", help="convert to weewx schema mapping")
+    parser.add_argument("--limit",  "-l", dest="limit",  action="store",      help="limit to one obs type")
 
     args = parser.parse_args()
 
