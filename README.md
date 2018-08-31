@@ -5,8 +5,8 @@ This is a quick listener for the WeatherFlow UDP broadcasts that can:
 
  * print received broadcasts
  * print decoded broadcasts to stdout
-    * and/or publish to MQTT
-    * optionally reformatted to match weewx schema
+ * publish to MQTT
+ * optionally mapped to match WeeWX schema
 
 ##  Usage
 
@@ -54,9 +54,9 @@ listening for broadcasts..
 
 ```
 
-### Making the --debug output more user-friendly
 
 Adding the --indent option reformats the output to be a little more readable...
+
 
 ```
 
@@ -91,7 +91,22 @@ listening for broadcasts..
 
 ### Publishing to MQTT
 
-The --mqtt option publishes to MQTT. In this example we also add the --stdout option to get more info of what it's decoding and publishing for illustrative purposes below...
+The --mqtt option publishes JSON to MQTT.
+
+```
+pi@zero:~ $ /usr/bin/python listen.py --mqtt
+setting up socket - done
+listening for broadcasts..
+    publishing to mqtt://mqtt/wf/status/sky
+    publishing to mqtt://mqtt/wf/obs/sky
+    publishing to mqtt://mqtt/wf/rapid_wind
+    publishing to mqtt://mqtt/wf/rapid_wind
+    publishing to mqtt://mqtt/wf/status/hub
+```
+
+Adding the --no_pub option will show the same output as above but not actually publish anything. This could also be used to quickly see if the Hub is broadcasting periodically.
+
+Adding the --stdout option will report the decoded data it would report.
 
 ```
 
@@ -109,9 +124,12 @@ rapid_wind     =>  ts  = 1535684275 mps = 0.72 dir = 254
 
 ```
 
+
 ### Decoding WeatherFlow data into WeeWX terminology
 
-The --weewx option maps WeatherFlow variable names to WeeWX-compatible parameter names, matching the WeeWX schema. Again, in this example we add the --stdout option to get more info of what it's decoding for illustrative purposes below... 
+The --weewx option maps WeatherFlow variable names to WeeWX-compatible parameter names, matching the WeeWX schema. Only some observations from the Air and Sky have mappings to WeeWX fields, so many of the available WeatherFlow measurements are skipped.
+
+In this example we add the --stdout option to get more info of what it's decoding for illustrative purposes below... 
 
 ```
 
@@ -122,9 +140,20 @@ obs_sky        =>  time_epoch  = 1535684549 uv  = 0.02 rain_accumulated  = 0.0 w
 {"UV": 0.02, "dateTime": 1535684549, "radiation": 1, "rain": 0.0, "windBatteryStatus": 3.44, "windGust": 2.01, "windSpeed": 1.37, "wind_direction": 226}
 ```
 
-### --weewx --mqtt --stdout
+Similar to the examples above, adding the --mqtt option 'also' publishes to MQTT.  In this example we add --no_pub which will show which topic would be published to.
 
-Similar to the examples above, adding the --mqtt option 'also' publishes to MQTT.  Again, in this example we add --stdout to show what is being published and to which MQTT topic.
+```
+
+pi@zero:~ $ python listen.py --weewx --mqtt --no_pub
+setting up socket - done
+listening for broadcasts..
+    publishing to mqtt://mqtt/wf/weewx
+    publishing to mqtt://mqtt/wf/weewx
+    publishing to mqtt://mqtt/wf/weewx
+
+```
+
+Adding the --stdout option will show the JSON that is (or would be) published.
 
 ```
 pi@zero:~ $ python listen.py --weewx --mqtt --stdout

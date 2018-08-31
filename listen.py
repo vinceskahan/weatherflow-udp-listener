@@ -280,7 +280,7 @@ def process_evt_precip(data):
     return data
 
 def mqtt_publish(mqtt_host,mqtt_topic,data):
-    if args.stdout:
+    if args.stdout or args.no_pub:
         print ("    publishing to mqtt://%s/%s" % (mqtt_host, mqtt_topic))
 
     if not args.no_pub:
