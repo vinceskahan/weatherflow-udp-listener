@@ -20,6 +20,10 @@
 #   --weewx, -w   convert to weewx schema mapping
 #
 #----------------
+#
+# compatibility notes:
+#   - The v91 API uses 'timestamp' in one place and 'time_epoch' in all others
+#     For consistency, this program uses 'timestamp' everywhere.
 
 from __future__ import print_function
 import paho.mqtt.client  as mqtt
@@ -38,10 +42,10 @@ MQTT_PORT = 1883
 MQTT_CLIENT_ID = "weatherflow"
 
 def process_rapid_wind(data):
-    rapid_wind_air_serial_number = data["serial_number"]   # of the device reporting the data
-    rapid_wind_time_epoch        = data["ob"][0]
-    rapid_wind_speed             = data["ob"][1]           # meters/second
-    rapid_wind_direction         = data["ob"][2]           # degrees
+    rapid_wind = {}
+    rapid_wind['timestamp']  = data["ob"][0]
+    rapid_wind['speed']      = data["ob"][1]           # meters/second
+    rapid_wind['direction']  = data["ob"][2]           # degrees
 
     # no need to map to weewx, as the obs_sky wind data already
     # reports the max rapid_wind_speed between obs_sky intervals
@@ -49,9 +53,9 @@ def process_rapid_wind(data):
 
     if args.stdout:
         print ("rapid_wind     => ", end='')
-        print (" ts  = " + str(rapid_wind_time_epoch), end='')
-        print (" mps = " + str(rapid_wind_speed), end='')
-        print (" dir = " + str(rapid_wind_direction), end='')
+        print (" ts  = " + str(rapid_wind['timestamp']), end='')
+        print (" mps = " + str(rapid_wind['speed']), end='')
+        print (" dir = " + str(rapid_wind['direction']), end='')
         print ('')
 
     # we don't bother reporting rapid_wind if --weewx was specified
@@ -60,25 +64,24 @@ def process_rapid_wind(data):
         if args.weewx:
             pass
         else:
-            mqtt_publish(MQTT_HOST,"wf/rapid_wind",data)
+            mqtt_publish(MQTT_HOST,"wf/rapid_wind",rapid_wind)
 
     return data
 
 def process_obs_air(data):
-    obs_air_serial_number                 = data["serial_number"]   # of the device reporting the data
-    obs_air_hub_sn                        = data["hub_sn"]
-    obs_air_time_epoch                    = data["obs"][0][0]
-    obs_air_station_pressure              = data["obs"][0][1]        # MB
-    obs_air_temperature                   = data["obs"][0][2]        # deg-C
-    obs_air_relative_humidity             = data["obs"][0][3]        # %
-    obs_air_lightning_strike_count        = data["obs"][0][4]
-    obs_air_lightning_strike_avg_distance = data["obs"][0][5]        # km
-    obs_air_battery                       = data["obs"][0][6]        # volts
-    obs_air_report_interval               = data["obs"][0][7]        # minutes
-    obs_air_firmware_revision             = data["firmware_revision"]
+    obs_air = {}
+    obs_air["timestamp"]                     = data["obs"][0][0]
+    obs_air["station_pressure"]              = data["obs"][0][1]        # MB
+    obs_air["temperature"]                   = data["obs"][0][2]        # deg-C
+    obs_air["relative_humidity"]             = data["obs"][0][3]        # %
+    obs_air["lightning_strike_count"]        = data["obs"][0][4]
+    obs_air["lightning_strike_avg_distance"] = data["obs"][0][5]        # km
+    obs_air["battery"]                       = data["obs"][0][6]        # volts
+    obs_air["report_interval"]               = data["obs"][0][7]        # minutes
+    obs_air["firmware_revision"]             = data["firmware_revision"]
 
     if args.weewx:
-        data["weewx"]["dateTime"]             = obs_air_time_epoch
+        data["weewx"]["dateTime"]             = obs_air_timestamp
         data["weewx"]["pressure"]             = obs_air_station_pressure
         data["weewx"]["outTemp"]              = obs_air_temperature
         data["weewx"]["outHumidity"]          = obs_air_relative_humidity
@@ -86,43 +89,42 @@ def process_obs_air(data):
 
     if args.stdout:
         print ("obs_air        => ", end='')
-        print (" ts  = " + str(obs_air_time_epoch), end='')
-        print (" station_pressure = " + str(obs_air_station_pressure), end='')
-        print (" temperature = " + str(obs_air_temperature), end='')
-        print (" relative_humidity = " + str(obs_air_relative_humidity), end='')
-        print (" lightning_strikes = " + str(obs_air_lightning_strike_count), end='')
-        print (" lightning_avg_km  = " + str(obs_air_lightning_strike_avg_distance), end='')
+        print (" ts  = "               + str(obs_air["timestamp"]), end='')
+        print (" station_pressure = "  + str(obs_air["station_pressure"]), end='')
+        print (" temperature = "       + str(obs_air["temperature"]), end='')
+        print (" relative_humidity = " + str(obs_air["relative_humidity"]), end='')
+        print (" lightning_strikes = " + str(obs_air["lightning_strike_count"]), end='')
+        print (" lightning_avg_km  = " + str(obs_air["lightning_strike_avg_distance"]), end='')
         print ('')
 
     if args.mqtt:
         if args.weewx:
             mqtt_publish(MQTT_HOST,"wf/weewx",data["weewx"])
         else:
-            mqtt_publish(MQTT_HOST,"wf/obs/air",data)
+            mqtt_publish(MQTT_HOST,"wf/obs/air",obs_air)
 
     return data
 
 def process_obs_sky(data):
-    obs_sky_serial_number                 = data["serial_number"]   # of the device reporting the data
-    obs_sky_hub_sn                        = data["hub_sn"]
-    obs_sky_time_epoch                    = data["obs"][0][0]
-    obs_sky_illuminance                   = data["obs"][0][1]       # lux
-    obs_sky_uv                            = data["obs"][0][2]       # index
-    obs_sky_rain_accumulated              = data["obs"][0][3]       # mm (in this reporting interval)
-    obs_sky_wind_lull                     = data["obs"][0][4]       # meters/second min 3 sec sample
-    obs_sky_wind_avg                      = data["obs"][0][5]       # meters/second avg over report interval
-    obs_sky_wind_gust                     = data["obs"][0][6]       # meters_second max 3 sec sample
-    obs_sky_wind_direction                = data["obs"][0][7]       # degrees
-    obs_sky_battery                       = data["obs"][0][8]       # volts
-    obs_sky_report_interval               = data["obs"][0][9]       # minutes
-    obs_sky_solar_radiation               = data["obs"][0][10]      # W/m^2
-    obs_sky_local_day_rain_accumulation   = data["obs"][0][11]      # mm (does not work in v91 of their firmware)
-    obs_sky_precipitation_type            = data["obs"][0][12]      # 0=none, 1=rain, 2=hail
-    obs_sky_wind_sample_interval          = data["obs"][0][13]      # seconds
-    obs_sky_firmware_revision             = data["firmware_revision"]
+    obs_sky = {}
+    obs_sky["timestamp"]                   = data["obs"][0][0]
+    obs_sky["illuminance"]                 = data["obs"][0][1]       # lux
+    obs_sky["uv"]                          = data["obs"][0][2]       # index
+    obs_sky["rain_accumulated"]            = data["obs"][0][3]       # mm (in this reporting interval)
+    obs_sky["wind_lull"]                   = data["obs"][0][4]       # meters/second min 3 sec sample
+    obs_sky["wind_avg"]                    = data["obs"][0][5]       # meters/second avg over report interval
+    obs_sky["wind_gust"]                   = data["obs"][0][6]       # meters_second max 3 sec sample
+    obs_sky["wind_direction"]              = data["obs"][0][7]       # degrees
+    obs_sky["battery"]                     = data["obs"][0][8]       # volts
+    obs_sky["report_interval"]             = data["obs"][0][9]       # minutes
+    obs_sky["solar_radiation"]             = data["obs"][0][10]      # W/m^2
+    obs_sky["local_day_rain_accumulation"] = data["obs"][0][11]      # mm (does not work in v91 of their firmware)
+    obs_sky["precipitation_type"]          = data["obs"][0][12]      # 0=none, 1=rain, 2=hail
+    obs_sky["wind_sample_interval"]        = data["obs"][0][13]      # seconds
+    obs_sky["firmware_revision"]           = data["firmware_revision"]
 
     if args.weewx:
-        data["weewx"]["dateTime"]          = obs_sky_time_epoch
+        data["weewx"]["dateTime"]          = obs_sky_timestamp
         data["weewx"]["UV"]                = obs_sky_uv
         data["weewx"]["windBatteryStatus"] = obs_sky_battery
         data["weewx"]["radiation"]         = obs_sky_solar_radiation
@@ -133,34 +135,43 @@ def process_obs_sky(data):
 
     if args.stdout:
         print ("obs_sky        => ", end='')
-        print (" time_epoch  = " + str(obs_sky_time_epoch) ,  end='')
-        print (" uv  = " + str(obs_sky_uv) , end='')
-        print (" rain_accumulated  = " + str(obs_sky_rain_accumulated) , end='')
-        print (" wind_lull = " + str(obs_sky_wind_lull) , end='')
-        print (" wind_avg = " + str(obs_sky_wind_avg) , end='')
-        print (" wind_gust = " + str(obs_sky_wind_gust) , end='')
-        print (" wind_direction = " + str(obs_sky_wind_direction) , end='')
+        print (" timestamp  = "        + str(obs_sky["_time_epoch"]) ,  end='')
+        print (" uv  = "               + str(obs_sky["_uv"]) , end='')
+        print (" rain_accumulated  = " + str(obs_sky["_rain_accumulated"]) , end='')
+        print (" wind_lull = "         + str(obs_sky["_wind_lull"]) , end='')
+        print (" wind_avg = "          + str(obs_sky["_wind_avg"]) , end='')
+        print (" wind_gust = "         + str(obs_sky["_wind_gust"]) , end='')
+        print (" wind_direction = "    + str(obs_sky["_wind_direction"]) , end='')
         print ('')
 
     if args.mqtt:
         if args.weewx:
             mqtt_publish(MQTT_HOST,"wf/weewx",data["weewx"])
         else:
-            mqtt_publish(MQTT_HOST,"wf/obs/sky",data)
+            mqtt_publish(MQTT_HOST,"wf/obs/sky",obs_sky)
 
     return data
 
-def process_device_status(data):   
-    device_status_serial_number       = data["serial_number"]       # of the device reporting the data
-    device_status_hub_sn              = data["hub_sn"]
-    device_status_timestamp           = data["timestamp"]
-    device_status_uptime              = data["uptime"]              # seconds
-    device_status_voltage             = data["voltage"]             # volts
-    device_status_firmware_revision   = data["firmware_revision"]
-    device_status_rssi                = data["rssi"]
-    device_status_hub_rssi            = data["hub_rssi"]
-    device_status_sensor_status       = data["sensor_status"]
-    device_status_debug               = data["debug"]                # 0=disabled, 1=enabled
+def process_device_status(data):
+
+    # both outside devices use the same status schema
+    if "AR-" in data["serial_number"]:
+            device_type = "air"
+    elif "SK-" in data["serial_number"]:
+            device_type = "sky"
+    else:
+            device_type = "unknown_type"
+
+    device_status = {}
+    device_status["device"]            = device_type
+    device_status["timestamp"]         = data["timestamp"]
+    device_status["uptime"]            = data["uptime"]              # seconds
+    device_status["voltage"]           = data["voltage"]             # volts
+    device_status["firmware_revision"] = data["firmware_revision"]
+    device_status["rssi"]              = data["rssi"]
+    device_status["hub_rssi"]          = data["hub_rssi"]
+    device_status["sensor_status"]     = data["sensor_status"]
+    device_status["debug"]             = data["debug"]                # 0=disabled, 1=enabled
 
     # sensor_status is an encoded enumeration
     #    0x00000000    all = sensors ok
@@ -176,43 +187,38 @@ def process_device_status(data):
 
     if args.stdout:
         print ("device_status  => ", end='')
-        print (" serial_number  = " + str(device_status_serial_number), end='')
-        print (" ts  = " + str(device_status_timestamp), end='')
-        print (" uptime  = " + str(device_status_uptime), end='')
-        print (" voltage  = " + str(device_status_voltage), end='')
-        print (" firmware_revision  = " + str(device_status_firmware_revision), end='')
-        print (" rssi  = " + str(device_status_rssi), end='')
-        print (" hub_rssi  = " + str(device_status_hub_rssi), end='')
+        print (" device_type = "        + str(device_type), end='')
+        print (" ts  = "                + str(device_status["timestamp"]), end='')
+        print (" uptime  = "            + str(device_status["uptime"]), end='')
+        print (" voltage  = "           + str(device_status["voltage"]), end='')
+        print (" firmware_revision  = " + str(device_status["firmware_revision"]), end='')
+        print (" rssi  = "              + str(device_status["rssi"]), end='')
+        print (" hub_rssi  = "          + str(device_status["hub_rssi"]), end='')
         print ('')
 
-    # both outside devices use the same reporting
-    if "AR-" in device_status_serial_number:
-            device_type = "air"
-    elif "SK-" in device_status_serial_number:
-            device_type = "sky"
-    else:
-            device_type = "unknown_type"
+    # construct the status topic to publish to
     topic = "wf/status/" + device_type
     if args.mqtt:
         if args.weewx:
             pass
         else:
-            mqtt_publish(MQTT_HOST,topic,data)
+            mqtt_publish(MQTT_HOST,topic,device_status)
 
     return data
 
 def process_hub_status(data):
-    hub_status_serial_number       = data["serial_number"]      # of the device reporting the data
-    hub_status_firmware_revision   = data["firmware_revision"]
-    hub_status_uptime              = data["uptime"]             # seconds
-    hub_status_rssi                = data["rssi"]
-    hub_status_timestamp           = data["timestamp"]
-    hub_status_reset_flags         = data["reset_flags"]
-    hub_status_seq                 = data["seq"]
-    hub_status_fs                  = data["fs"]                 # internal use only
-    hub_status_radio_stats_version = data["radio_stats"][0]
-    hub_status_reboot_count        = data["radio_stats"][1]
-    hub_status_mqtt_stats          = data["mqtt_stats"]         # internal use only
+    hub_status = {}
+    hub_status["device"]              = "hub"
+    hub_status["firmware_revision"]   = data["firmware_revision"]
+    hub_status["uptime"]              = data["uptime"]             # seconds
+    hub_status["rssi"]                = data["rssi"]
+    hub_status["timestamp"]           = data["timestamp"]
+    hub_status["reset_flags"]         = data["reset_flags"]
+    hub_status["seq"]                 = data["seq"]
+    hub_status["fs"]                  = data["fs"]                 # internal use only
+    hub_status["radio_stats_version"] = data["radio_stats"][0]
+    hub_status["reboot_count"]        = data["radio_stats"][1]
+    hub_status["mqtt_stats"]          = data["mqtt_stats"]         # internal use only
 
     # reset flags are a comma-delimited string with values:
     #   BOR = brownout reset
@@ -225,63 +231,62 @@ def process_hub_status(data):
 
     if args.stdout:
         print ("hub_status     => ", end='')
-        print (" ts  = " + str(hub_status_timestamp), end='')
-        print (" firmware_revision  = " + str(hub_status_firmware_revision), end='')
-        print (" uptime  = " + str(hub_status_uptime), end='')
-        print (" rssi  = " + str(hub_status_rssi), end='')
+        print (" ts  = "                + str(hub_status["timestamp"]), end='')
+        print (" firmware_revision  = " + str(hub_status["firmware_revision"]), end='')
+        print (" uptime  = "            + str(hub_status["uptime"]), end='')
+        print (" rssi  = "              + str(hub_status["rssi"]), end='')
         print ('')
 
     if args.mqtt:
         if args.weewx:
             pass
         else:
-            mqtt_publish(MQTT_HOST,"wf/status/hub",data)
+            mqtt_publish(MQTT_HOST,"wf/status/hub",hub_status)
 
     return data
 
 def process_evt_strike(data):
-    evt_strike_serial_number = data["serial_number"]   # of the device reporting the data
-    evt_strike_hub_sn        = data["hub_sn"]
-    evt_strike_time_epoch    = data["evt"][0]
-    evt_strike_distance      = data["evt"][1]          # km
-    evt_strike_energy        = data["evt"][2]          # no units documented
+    evt_strike = {}
+    evt_strike["timestamp"] = data["evt"][0]
+    evt_strike["distance"]  = data["evt"][1]          # km
+    evt_strike["energy"]    = data["evt"][2]          # no units documented
 
     if args.stdout:
         print ("evt_strike     => ", end='')
-        print (" ts  = " + str(evt_strike_time_epoch), end='')
-        print (" distance  = " + str(evt_strike_distance), end='')
-        print (" energy  = " + str(evt_strike_energy), end='')
+        print (" ts  = "       + str(evt_strike["timestamp"]), end='')
+        print (" distance  = " + str(evt_strike["distance"]), end='')
+        print (" energy  = "   + str(evt_strike["energy"]), end='')
         print ('')
 
     if args.mqtt:
         if args.weewx:
             pass
         else:
-            mqtt_publish(MQTT_HOST,"wf/evt/strike",data)
+            mqtt_publish(MQTT_HOST,"wf/evt/strike",evt_strike)
 
     return data
 
 def process_evt_precip(data):
-    evt_precip_serial_number = data["serial_number"]   # of the device reporting the data
-    evt_precip_hub_sn        = data["hub_sn"]
-    evt_precip_time_epoch    = data["evt"][0]
+    evt_precip = {}
+    evt_precip["timestamp"] = data["evt"][0]
 
     if args.stdout:
         print ("evt_precip     => ", end='')
-        print (" ts  = " + str(evt_precip_time_epoch), end='')
+        print (" ts  = " + str(evt_precip["timestamp"]), end='')
         print ('')
 
     if args.mqtt:
         if args.weewx:
             pass
         else:
-            mqtt_publish(MQTT_HOST,"wf/evt/precip",data)
+            mqtt_publish(MQTT_HOST,"wf/evt/precip",evt_precip)
 
     return data
 
 def mqtt_publish(mqtt_host,mqtt_topic,data):
     if args.stdout or args.no_pub:
-        print ("    publishing to mqtt://%s/%s" % (mqtt_host, mqtt_topic))
+        print ("publishing to mqtt://%s/%s" % (mqtt_host, mqtt_topic))
+        print (json.dumps(data))
 
     if not args.no_pub:
         broker_address=mqtt_host
