@@ -117,7 +117,7 @@ publishing to mqtt://mqtt/wf/rapid_wind
 
 Adding the --decoded option shows decoded data from the broadcast as well
 ```
-pi@zero:~ $ python listen.py --mqtt --debug
+pi@zero:~ $ python listen.py --mqtt --decoded
 setting up socket - done
 listening for broadcasts..
 rapid_wind     =>  ts  = 1535821622 mps = 1.07 dir = 316
