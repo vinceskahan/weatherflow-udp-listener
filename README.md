@@ -4,170 +4,173 @@
 This is a quick listener for the WeatherFlow UDP broadcasts that can:
 
  * print received broadcasts
- * print decoded broadcasts to stdout
+ * print decoded broadcasts to decoded
  * publish to MQTT
  * optionally mapped to match WeeWX schema
 
 ##  Usage
 
 ```
-
-Usage: listen.py [-h] [--debug] [--stdout] [--indent] [--mqtt] [--no_pub]
-                 [--weewx] [--limit LIMIT]
+usage: listen.py [-h] [-r] [-d] [-l LIMIT] [-i] [-m] [-n] [-w]
 
 optional arguments:
   -h, --help            show this help message and exit
-  --debug, -d           print debug data to stdout
-  --stdout, -s          print decoded data to stdout
-  --indent, -i          indent debug UDP to stdout (requires -d)
-  --mqtt, -m            publish to MQTT
-  --no_pub, -n          report but do not publish to MQTT
-  --weewx, -w           convert to weewx schema mapping
-  --limit LIMIT, -l LIMIT
+  -r, --raw             print raw data to stddout
+  -d, --decoded         print decoded data to stdout
+  -l LIMIT, --limit LIMIT
                         limit to one obs type
+  -i, --indent          indent raw data to stdout (requires -d)
+  -m, --mqtt            publish to MQTT
+  -n, --no_pub          report but do not publish to MQTT
+  -w, --weewx           convert to weewx schema mapping
 
 for --limit, possibilities are:
    rapid_wind, obs_sky, obs_air,
-   status_hub, device_status, evt_precip, evt_strike
+   hub_status, device_status, evt_precip, evt_strike
 
 ```
 
 ## Typical Usage
 
-### Generating MQTT topics for other systems to subscribe to
+### Publishing WeatherFlow data to MQTT
 
 Typically it is expected that this script would be used to generate MQTT publish messages via running as daemon ala:
-
 ```
-
 nohup python listen.py --mqtt [--weewx] &
-
 ```
-
-## Examples
 
 ### Debugging your WeatherFlow hub, sky, and air
 
-The --debug option prints out decoded UDP broadcasts in JSON format to stdout...
-
+#### Printing out unaltered data received from the station broadcasts
+The --raw option prints out decoded UDP broadcasts in JSON format to stdout...
 ```
-
-pi@zero:~ $ python listen.py --debug
+pi@zero:~ $ python listen.py --raw
 setting up socket - done
 listening for broadcasts..
 {"hub_sn": "HB-00010412", "ob": [1535684062, 0.63, 272], "serial_number": "SK-00013695", "type": "rapid_wind"}
-
 ```
 
-Adding the '--limit type' option limits the output to just one type of event/status/observation.
-
-Adding the --indent option reformats the output to be a little more readable...
-
-
+#### Decoding the station data into a more human-friendly format
+The --decoded option prints a more human-friendly output of the decoded UDP broadcast...
 ```
-
-pi@zero:~ $ python listen.py --debug --indent
+pi@zero:~ $ python listen.py --decoded
 setting up socket - done
 listening for broadcasts..
-###################################
-{
-  "hub_sn": "HB-00010412",
-  "ob": [
-    1535684197,
-    2.01,
-    211
-  ],
-  "serial_number": "SK-00013695",
-  "type": "rapid_wind"
-}
-###################################
-{
-  "hub_sn": "HB-00010412",
-  "ob": [
-    1535684200,
-    1.65,
-    219
-  ],
-  "serial_number": "SK-00013695",
-  "type": "rapid_wind"
-}
-
+hub_status     =>  ts  = 1535819472 firmware_revision  = 91 uptime  = 333458 rssi  = -35
+rapid_wind     =>  ts  = 1535819474 mps = 1.34 dir = 190
+rapid_wind     =>  ts  = 1535819477 mps = 1.48 dir = 211
 ```
 
+#### Limiting the output to one observation/status/event type
+The '--limit type' option limits the output to just one type of event/status/observation.
+```
+pi@zero:~ $ python listen.py --raw --limit hub_status
+setting up socket - done
+listening for broadcasts..
+{"firmware_revision": "91", "fs": "1,0", "mqtt_stats": [53], "radio_stats": [5, 3], "reset_flags": "BOR,PIN,POR", "rssi": -35, "seq": 33368, "serial_number": "HB-00010412", "timestamp": 1535819752, "type": "hub_status", "uptime": 333738}
+{"firmware_revision": "91", "fs": "1,0", "mqtt_stats": [53], "radio_stats": [5, 3], "reset_flags": "BOR,PIN,POR", "rssi": -35, "seq": 33370, "serial_number": "HB-00010412", "timestamp": 1535819772, "type": "hub_status", "uptime": 333758}
+```
+
+#### Reformatting the JSON data for easier interpretation
+The --indent option reformats the output to be a little more readable...
+```
+@zero:~ $ python listen.py --raw --limit rapid_wind --indent
+setting up socket - done
+listening for broadcasts..
+
+{
+  "hub_sn": "HB-00010412",
+  "ob": [
+    1535819864,
+    0.0,
+    0
+  ],
+  "serial_number": "SK-00013695",
+  "type": "rapid_wind"
+}
+
+{
+  "hub_sn": "HB-00010412",
+  "ob": [
+    1535819867,
+    0.0,
+    0
+  ],
+  "serial_number": "SK-00013695",
+  "type": "rapid_wind"
+}
+```
 
 ### Publishing to MQTT
 
 The --mqtt option publishes JSON to MQTT.
 
 ```
-pi@zero:~ $ /usr/bin/python listen.py --mqtt
+pi@zero:~ $ python listen.py --mqtt
 setting up socket - done
 listening for broadcasts..
-    publishing to mqtt://mqtt/wf/status/sky
-    publishing to mqtt://mqtt/wf/obs/sky
-    publishing to mqtt://mqtt/wf/rapid_wind
-    publishing to mqtt://mqtt/wf/rapid_wind
-    publishing to mqtt://mqtt/wf/status/hub
+publishing to mqtt://mqtt/wf/status/sky
+publishing to mqtt://mqtt/wf/obs/sky
+publishing to mqtt://mqtt/wf/rapid_wind
+publishing to mqtt://mqtt/wf/rapid_wind
 ```
 
-Adding the --no_pub option will show the same output as above but not actually publish anything. This could also be used to quickly see if the Hub is broadcasting periodically.
-
-Adding the --stdout option will report the decoded data it would report.
-
+Adding the --decoded option shows decoded data from the broadcast as well
 ```
-
-pi@zero:~ $ python listen.py --mqtt --stdout
+pi@zero:~ $ python listen.py --mqtt --debug
 setting up socket - done
 listening for broadcasts..
-rapid_wind     =>  ts  = 1535684269 mps = 1.52 dir = 215
-    publishing to mqtt://mqtt/wf/rapid_wind
-rapid_wind     =>  ts  = 1535684272 mps = 0.72 dir = 285
-    publishing to mqtt://mqtt/wf/rapid_wind
-hub_status     =>  ts  = 1535684275 firmware_revision  = 91 uptime  = 198261 rssi  = -37
-    publishing to mqtt://mqtt/wf/status/hub
-rapid_wind     =>  ts  = 1535684275 mps = 0.72 dir = 254
-    publishing to mqtt://mqtt/wf/rapid_wind
-
+rapid_wind     =>  ts  = 1535821622 mps = 1.07 dir = 316
+publishing to mqtt://mqtt/wf/rapid_wind
+hub_status     =>  ts  = 1535821622 firmware_revision  = 91 uptime  = 335608 rssi  = -35
+publishing to mqtt://mqtt/wf/status/hub
 ```
 
+Adding the --raw option shows the data that would be published as well as the raw UDP data
+```
+pi@zero:~ $ python listen.py --mqtt --raw
+setting up socket - done
+listening for broadcasts..
+    raw data:  {"hub_sn": "HB-00010412", "ob": [1535821559, 0.94, 272], "serial_number": "SK-00013695", "type": "rapid_wind"}
+publishing to mqtt://mqtt/wf/rapid_wind
+     {"direction": 272, "speed": 0.94, "timestamp": 1535821559}
+```
 
 ### Decoding WeatherFlow data into WeeWX terminology
 
 The --weewx option maps WeatherFlow variable names to WeeWX-compatible parameter names, matching the WeeWX schema. Only some observations from the Air and Sky have mappings to WeeWX fields, so many of the available WeatherFlow measurements are skipped.
 
-In this example we add the --stdout option to get more info of what it's decoding for illustrative purposes below... 
-
 ```
-
-pi@zero:~ $ python listen.py --weewx --stdout
+pi@zero:~ $ python listen.py --weewx
 setting up socket - done
 listening for broadcasts..
-obs_sky        =>  time_epoch  = 1535684549 uv  = 0.02 rain_accumulated  = 0.0 wind_lull = 0.72 wind_avg = 1.37 wind_gust = 2.01 wind_direction = 226
-{"UV": 0.02, "dateTime": 1535684549, "radiation": 1, "rain": 0.0, "windBatteryStatus": 3.44, "windGust": 2.01, "windSpeed": 1.37, "wind_direction": 226}
+{"dateTime": 1535821716, "outHumidity": 76, "outTemp": 15.43, "outTempBatteryStatus": 3.48, "pressure": 1010.8}
+{"UV": 4.99, "dateTime": 1535821729, "radiation": 380, "rain": 0.0, "windBatteryStatus": 3.43, "windGust": 1.92, "windSpeed": 1.1, "wind_direction": 275}
 ```
 
-Similar to the examples above, adding the --mqtt option 'also' publishes to MQTT.  In this example we add --no_pub which will show which topic would be published to.
+Similar to the examples above, adding the --mqtt option 'also' publishes to MQTT.
 
 ```
 
+pi@zero:~ $ python listen.py --weewx --mqtt
+setting up socket - done
+listening for broadcasts..
+    publishing to mqtt://mqtt/wf/weewx
+    publishing to mqtt://mqtt/wf/weewx
+    publishing to mqtt://mqtt/wf/weewx
+
+```
+
+Adding the --no_pub option will show the JSON that would be published.
+
+```
 pi@zero:~ $ python listen.py --weewx --mqtt --no_pub
 setting up socket - done
 listening for broadcasts..
-    publishing to mqtt://mqtt/wf/weewx
-    publishing to mqtt://mqtt/wf/weewx
-    publishing to mqtt://mqtt/wf/weewx
-
-```
-
-Adding the --stdout option will show the JSON that is (or would be) published.
-
-```
-pi@zero:~ $ python listen.py --weewx --mqtt --stdout
-setting up socket - done
-listening for broadcasts..
-obs_air        =>  ts  = 1535684899 station_pressure = 1006.8 temperature = 18.8 relative_humidity = 74 lightning_strikes = 0 lightning_avg_km  = 0
-    publishing to mqtt://mqtt/wf/weewx
-{"dateTime": 1535684899, "outHumidity": 74, "outTemp": 18.8, "outTempBatteryStatus": 3.51, "pressure": 1006.8}
+publishing to mqtt://mqtt/wf/weewx
+     {"dateTime": 1535822375, "outHumidity": 76, "outTemp": 15.8, "outTempBatteryStatus": 3.48, "pressure": 1010.7}
+publishing to mqtt://mqtt/wf/weewx
+     {"UV": 6.19, "dateTime": 1535822388, "radiation": 468, "rain": 0.0, "windBatteryStatus": 3.43, "windGust": 2.5, "windSpeed": 1.44, "wind_direction": 233}
 ```
 
 ## Subscribing to MQTT published topics

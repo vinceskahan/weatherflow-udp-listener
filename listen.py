@@ -8,22 +8,29 @@
 #
 #----------------
 #
-# usage: listen.py [-h] [--mqtt] [--stdout] [--no_pub] [--weewx] [--debug]
-#
-# optional arguments:
-#   -h, --help    show this help message and exit
-#   --stdout, -s  print decoded data to stdout
-#   --debug, -d   print debug UDP data to stdout
-#   --indent, -i  indent debug UDP to stdout (requires -d)
-#   --mqtt, -m    publish to MQTT
-#   --no_pub, -n  report but do not publish to MQTT
-#   --weewx, -w   convert to weewx schema mapping
-#
+"""
+usage: listen.py [-h] [-r] [-d] [-l LIMIT] [-i] [-m] [-n] [-w]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -r, --raw             print raw data to stddout
+  -d, --decoded         print decoded data to stdout
+  -l LIMIT, --limit LIMIT
+                        limit to one obs type
+  -i, --indent          indent raw data to stdout (requires -d)
+  -m, --mqtt            publish to MQTT
+  -n, --no_pub          report but do not publish to MQTT
+  -w, --weewx           convert to weewx schema mapping
+
+for --limit, possibilities are:
+   rapid_wind, obs_sky, obs_air,
+   hub_status, device_status, evt_precip, evt_strike
+"""
 #----------------
 #
 # compatibility notes:
 #   - The v91 API uses 'timestamp' in one place and 'time_epoch' in all others
-#     For consistency, this program uses 'timestamp' everywhere.
+#     For consistency, this program uses 'timestamp' everywhere in decoded output
 
 from __future__ import print_function
 import paho.mqtt.client  as mqtt
@@ -43,6 +50,7 @@ MQTT_CLIENT_ID = "weatherflow"
 
 def process_rapid_wind(data):
     if args.limit and args.limit != "rapid_wind": return
+    if args.raw: print_raw(data)
 
     rapid_wind = {}
     rapid_wind['timestamp']  = data["ob"][0]
@@ -53,7 +61,7 @@ def process_rapid_wind(data):
     # reports the max rapid_wind_speed between obs_sky intervals
     # as the wind gust speed
 
-    if args.stdout:
+    if args.decoded:
         print ("rapid_wind     => ", end='')
         print (" ts  = " + str(rapid_wind['timestamp']), end='')
         print (" mps = " + str(rapid_wind['speed']), end='')
@@ -72,6 +80,7 @@ def process_rapid_wind(data):
 
 def process_obs_air(data):
     if args.limit and args.limit != "obs_air": return
+    if args.raw: print_raw(data)
 
     obs_air = {}
     obs_air["timestamp"]                     = data["obs"][0][0]
@@ -85,13 +94,13 @@ def process_obs_air(data):
     obs_air["firmware_revision"]             = data["firmware_revision"]
 
     if args.weewx:
-        data["weewx"]["dateTime"]             = obs_air_timestamp
-        data["weewx"]["pressure"]             = obs_air_station_pressure
-        data["weewx"]["outTemp"]              = obs_air_temperature
-        data["weewx"]["outHumidity"]          = obs_air_relative_humidity
-        data["weewx"]["outTempBatteryStatus"] = obs_air_battery
+        data["weewx"]["dateTime"]             = obs_air["timestamp"]
+        data["weewx"]["pressure"]             = obs_air["station_pressure"]
+        data["weewx"]["outTemp"]              = obs_air["temperature"]
+        data["weewx"]["outHumidity"]          = obs_air["relative_humidity"]
+        data["weewx"]["outTempBatteryStatus"] = obs_air["battery"]
 
-    if args.stdout:
+    if args.decoded:
         print ("obs_air        => ", end='')
         print (" ts  = "               + str(obs_air["timestamp"]), end='')
         print (" station_pressure = "  + str(obs_air["station_pressure"]), end='')
@@ -111,6 +120,7 @@ def process_obs_air(data):
 
 def process_obs_sky(data):
     if args.limit and args.limit != "obs_sky": return
+    if args.raw: print_raw(data)
 
     obs_sky = {}
     obs_sky["timestamp"]                   = data["obs"][0][0]
@@ -130,24 +140,24 @@ def process_obs_sky(data):
     obs_sky["firmware_revision"]           = data["firmware_revision"]
 
     if args.weewx:
-        data["weewx"]["dateTime"]          = obs_sky_timestamp
-        data["weewx"]["UV"]                = obs_sky_uv
-        data["weewx"]["windBatteryStatus"] = obs_sky_battery
-        data["weewx"]["radiation"]         = obs_sky_solar_radiation
-        data["weewx"]["windGust"]          = obs_sky_wind_gust
-        data["weewx"]["windSpeed"]         = obs_sky_wind_avg
-        data["weewx"]["wind_direction"]    = obs_sky_wind_direction
-        data["weewx"]["rain"]              = obs_sky_rain_accumulated
+        data["weewx"]["dateTime"]          = obs_sky["timestamp"]
+        data["weewx"]["UV"]                = obs_sky["uv"]
+        data["weewx"]["windBatteryStatus"] = obs_sky["battery"]
+        data["weewx"]["radiation"]         = obs_sky["solar_radiation"]
+        data["weewx"]["windGust"]          = obs_sky["wind_gust"]
+        data["weewx"]["windSpeed"]         = obs_sky["wind_avg"]
+        data["weewx"]["wind_direction"]    = obs_sky["wind_direction"]
+        data["weewx"]["rain"]              = obs_sky["rain_accumulated"]
 
-    if args.stdout:
+    if args.decoded:
         print ("obs_sky        => ", end='')
-        print (" timestamp  = "        + str(obs_sky["_time_epoch"]) ,  end='')
-        print (" uv  = "               + str(obs_sky["_uv"]) , end='')
-        print (" rain_accumulated  = " + str(obs_sky["_rain_accumulated"]) , end='')
-        print (" wind_lull = "         + str(obs_sky["_wind_lull"]) , end='')
-        print (" wind_avg = "          + str(obs_sky["_wind_avg"]) , end='')
-        print (" wind_gust = "         + str(obs_sky["_wind_gust"]) , end='')
-        print (" wind_direction = "    + str(obs_sky["_wind_direction"]) , end='')
+        print (" timestamp  = "        + str(obs_sky["time_epoch"]) ,  end='')
+        print (" uv  = "               + str(obs_sky["uv"]) , end='')
+        print (" rain_accumulated  = " + str(obs_sky["rain_accumulated"]) , end='')
+        print (" wind_lull = "         + str(obs_sky["wind_lull"]) , end='')
+        print (" wind_avg = "          + str(obs_sky["wind_avg"]) , end='')
+        print (" wind_gust = "         + str(obs_sky["wind_gust"]) , end='')
+        print (" wind_direction = "    + str(obs_sky["wind_direction"]) , end='')
         print ('')
 
     if args.mqtt:
@@ -160,6 +170,7 @@ def process_obs_sky(data):
 
 def process_device_status(data):
     if args.limit and args.limit != "device_status": return
+    if args.raw: print_raw(data)
 
     # both outside devices use the same status schema
     if "AR-" in data["serial_number"]:
@@ -178,7 +189,7 @@ def process_device_status(data):
     device_status["rssi"]              = data["rssi"]
     device_status["hub_rssi"]          = data["hub_rssi"]
     device_status["sensor_status"]     = data["sensor_status"]
-    device_status["debug"]             = data["debug"]                # 0=disabled, 1=enabled
+    device_status["debug"]             = data["debug"]              # 0=disabled, 1=enabled
 
     # sensor_status is an encoded enumeration
     #    0x00000000    all = sensors ok
@@ -192,7 +203,7 @@ def process_device_status(data):
     #    0x00000080    sky = precip failed
     #    0x00000100    sky = light/uv failed
 
-    if args.stdout:
+    if args.decoded:
         print ("device_status  => ", end='')
         print (" device_type = "        + str(device_type), end='')
         print (" ts  = "                + str(device_status["timestamp"]), end='')
@@ -215,6 +226,7 @@ def process_device_status(data):
 
 def process_hub_status(data):
     if args.limit and args.limit != "hub_status": return
+    if args.raw: print_raw(data)
 
     hub_status = {}
     hub_status["device"]              = "hub"
@@ -238,7 +250,7 @@ def process_hub_status(data):
     #   WWD = window watchdog reset
     #   LPW = low-power reset
 
-    if args.stdout:
+    if args.decoded:
         print ("hub_status     => ", end='')
         print (" ts  = "                + str(hub_status["timestamp"]), end='')
         print (" firmware_revision  = " + str(hub_status["firmware_revision"]), end='')
@@ -255,12 +267,15 @@ def process_hub_status(data):
     return data
 
 def process_evt_strike(data):
+    if args.limit and args.limit != "evt_strike": return
+    if args.raw: print_raw(data)
+
     evt_strike = {}
     evt_strike["timestamp"] = data["evt"][0]
     evt_strike["distance"]  = data["evt"][1]          # km
     evt_strike["energy"]    = data["evt"][2]          # no units documented
 
-    if args.stdout:
+    if args.decoded:
         print ("evt_strike     => ", end='')
         print (" ts  = "       + str(evt_strike["timestamp"]), end='')
         print (" distance  = " + str(evt_strike["distance"]), end='')
@@ -277,11 +292,12 @@ def process_evt_strike(data):
 
 def process_evt_precip(data):
     if args.limit and args.limit != "evt_precip": return
+    if args.raw: print_raw(data)
 
     evt_precip = {}
     evt_precip["timestamp"] = data["evt"][0]
 
-    if args.stdout:
+    if args.decoded:
         print ("evt_precip     => ", end='')
         print (" ts  = " + str(evt_precip["timestamp"]), end='')
         print ('')
@@ -295,9 +311,9 @@ def process_evt_precip(data):
     return data
 
 def mqtt_publish(mqtt_host,mqtt_topic,data):
-    if args.stdout or args.no_pub:
-        print ("publishing to mqtt://%s/%s" % (mqtt_host, mqtt_topic))
-        print (json.dumps(data))
+    print ("publishing to mqtt://%s/%s" % (mqtt_host, mqtt_topic))
+    if args.no_pub:
+        print ("    ", json.dumps(data,sort_keys=True));
 
     if not args.no_pub:
         broker_address=mqtt_host
@@ -317,6 +333,15 @@ def mqtt_publish(mqtt_host,mqtt_topic,data):
 
     return
 
+def print_raw(data):
+        if args.raw:
+            if args.indent:
+                print ("")
+                print (json.dumps(data,sort_keys=True,indent=2));
+            else:
+                print ("    raw data: ", json.dumps(data,sort_keys=True));
+            next
+
 
 if __name__ == "__main__":
 
@@ -327,28 +352,33 @@ if __name__ == "__main__":
         epilog="""
 for --limit, possibilities are:
    rapid_wind, obs_sky, obs_air,
-   status_hub, device_status, evt_precip, evt_strike
+   hub_status, device_status, evt_precip, evt_strike
        """,
     )
 
-    parser.add_argument("--debug",  "-d", dest="debug",  action="store_true", help="print debug data to stdout")
-    parser.add_argument("--stdout", "-s", dest="stdout", action="store_true", help="print decoded data to stdout")
-    parser.add_argument("--indent", "-i", dest="indent", action="store_true", help="indent debug UDP to stdout (requires -d)")
-    parser.add_argument("--mqtt",   "-m", dest="mqtt",   action="store_true", help="publish to MQTT")
-    parser.add_argument("--no_pub", "-n", dest="no_pub", action="store_true", help="report but do not publish to MQTT")
-    parser.add_argument("--weewx",  "-w", dest="weewx",  action="store_true", help="convert to weewx schema mapping")
-    parser.add_argument("--limit",  "-l", dest="limit",  action="store",      help="limit to one obs type")
+    parser.add_argument("-r", "--raw",     dest="raw",     action="store_true", help="print raw data to stddout")
+    parser.add_argument("-d", "--decoded", dest="decoded", action="store_true", help="print decoded data to stdout")
+    parser.add_argument("-l", "--limit",   dest="limit",   action="store",      help="limit to one obs type")
+
+    parser.add_argument("-i", "--indent",  dest="indent",  action="store_true", help="indent raw data to stdout (requires -d)")
+
+    parser.add_argument("-m", "--mqtt",    dest="mqtt",    action="store_true", help="publish to MQTT")
+    parser.add_argument("-n", "--no_pub",  dest="no_pub",  action="store_true", help="report but do not publish to MQTT")
+    parser.add_argument("-w", "--weewx",   dest="weewx",   action="store_true", help="convert to weewx schema mapping")
 
     args = parser.parse_args()
 
-    if (args.indent) and (not args.debug):
-        print ("\n# exiting - must also specify --debug")
+    if (args.indent) and (not args.raw):
+        print ("\n# exiting - must also specify --raw")
         parser.print_usage()
         print ()
         sys.exit(1)
 
-    if (not args.mqtt) and (not args.stdout) and (not args.weewx) and (not args.debug):
-        print ("\n# exiting - must specify at least one option")
+    if (not args.mqtt) and (not args.decoded) and (not args.weewx) and (not args.raw):
+        print ("\n#")
+        print ("# exiting - must specify at least one option")
+        print ("#           --raw, --decoded, --mqtt, and/or --weewx")
+        print ("#\n")
         parser.print_usage()
         print ()
         sys.exit(1)
@@ -364,14 +394,6 @@ for --limit, possibilities are:
     while 1:
         msg=s.recvfrom(1024)
         data=json.loads(msg[0])      # this is the JSON payload
-
-        if args.debug:
-            if args.indent:
-                print ("###################################")
-                print (json.dumps(data,sort_keys=True,indent=2));
-            else:
-                print (json.dumps(data,sort_keys=True));
-            next
 
         # initialize weewx keys in data
         if args.weewx:
@@ -397,9 +419,8 @@ for --limit, possibilities are:
 
         # we have our data updated with weewx-mapped content by now
         # so print it out if there was anything mapped to weewx fields
-        if args.weewx:
-            if len(data["weewx"]) and args.stdout:
-                print (json.dumps(data["weewx"],sort_keys=True))
+#        if args.weewx and len(data["weewx"]) and (args.decoded or args.raw):
+#                print ("main: ",json.dumps(data["weewx"],sort_keys=True))
 
 
 #
