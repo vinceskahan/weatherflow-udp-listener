@@ -70,12 +70,18 @@ rapid_wind     =>  ts  = 1535819477 mps = 1.48 dir = 211
 
 #### Limiting the output to one observation/status/event type
 The '--limit type' option limits the output to just one type of event/status/observation.
+
 ```
 pi@zero:~ $ python listen.py --raw --limit hub_status
 setting up socket - done
 listening for broadcasts..
 {"firmware_revision": "91", "fs": "1,0", "mqtt_stats": [53], "radio_stats": [5, 3], "reset_flags": "BOR,PIN,POR", "rssi": -35, "seq": 33368, "serial_number": "HB-00010412", "timestamp": 1535819752, "type": "hub_status", "uptime": 333738}
 {"firmware_revision": "91", "fs": "1,0", "mqtt_stats": [53], "radio_stats": [5, 3], "reset_flags": "BOR,PIN,POR", "rssi": -35, "seq": 33370, "serial_number": "HB-00010412", "timestamp": 1535819772, "type": "hub_status", "uptime": 333758}
+```
+
+Note: you can supply multiple limited observations ala:
+```
+python listen.py --limit obs_sky,obs_air
 ```
 
 #### Reformatting the JSON data for easier interpretation

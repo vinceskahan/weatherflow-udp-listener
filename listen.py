@@ -49,7 +49,7 @@ MQTT_PORT = 1883
 MQTT_CLIENT_ID = "weatherflow"
 
 def process_rapid_wind(data):
-    if args.limit and args.limit != "rapid_wind": return
+    if args.limit and ("rapid_wind" not in args.limit): return
     if args.raw: print_raw(data)
 
     rapid_wind = {}
@@ -79,7 +79,7 @@ def process_rapid_wind(data):
     return data
 
 def process_obs_air(data):
-    if args.limit and args.limit != "obs_air": return
+    if args.limit and ("obs_air" not in args.limit): return
     if args.raw: print_raw(data)
 
     obs_air = {}
@@ -119,7 +119,7 @@ def process_obs_air(data):
     return data
 
 def process_obs_sky(data):
-    if args.limit and args.limit != "obs_sky": return
+    if args.limit and ("obs_sky" not in args.limit): return
     if args.raw: print_raw(data)
 
     obs_sky = {}
