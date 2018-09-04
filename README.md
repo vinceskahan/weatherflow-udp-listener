@@ -43,7 +43,8 @@ for --limit, possibilities are:
 
 Typically it is expected that this script would be used to generate MQTT publish messages via running as daemon ala:
 ```
-nohup python listen.py --mqtt [--weewx] &
+nohup python /usr/local/bin/listen.py --mqtt  -l "obs_sky obs_air" >/dev/null 2>&1 &
+
 ```
 
 ### Debugging your WeatherFlow hub, sky, and air
@@ -69,7 +70,7 @@ rapid_wind     =>  ts  = 1535819477 mps = 1.48 dir = 211
 ```
 
 #### Limiting the output to one observation/status/event type
-The '--limit type' option limits the output to just one type of event/status/observation.
+The '--limit type' option limits the event/status/observation(s) being processed.
 
 ```
 pi@zero:~ $ python listen.py --raw --limit hub_status
@@ -82,6 +83,7 @@ listening for broadcasts..
 Note: you can supply multiple limited observations ala:
 ```
 python listen.py --limit obs_sky,obs_air
+python listen.py --limit "obs_sky obs_air"
 ```
 
 #### Reformatting the JSON data for easier interpretation
