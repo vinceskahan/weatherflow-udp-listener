@@ -6,6 +6,13 @@
 #    and prints the decoded info to standard out (optionally)
 #    or publishes the decoded data to MQTT (also optionally)
 #
+# IMPORTANT - this is tested versus v91 of the hub firmware
+#             and coded versus the matching API docs at
+#             https://weatherflow.github.io/SmartWeather/api/udp
+#
+#             While it 'might' work for different firmware,
+#             your mileage might vary....
+#
 #----------------
 #
 """
@@ -48,14 +55,72 @@ MQTT_HOST = "mqtt"
 MQTT_PORT = 1883
 MQTT_CLIENT_ID = "weatherflow"
 
+#----------------
+#
+# process the various types of events or observations
+#
+# these routines are in the order shown in __main__ which
+# should match up with the order in the WeatherFlow UDP API docs online
+#
+
+def process_evt_precip(data):
+    if args.limit and args.limit != "evt_precip": return
+    if args.raw: print_raw(data)
+
+    evt_precip = {}
+                                                      # skip serial_number
+                                                      # skip hub_sn
+    evt_precip["timestamp"] = data["evt"][0]
+
+    if args.decoded:
+        print ("evt_precip     => ", end='')
+        print (" ts  = " + str(evt_precip["timestamp"]), end='')
+        print ('')
+
+    if args.mqtt:
+        if args.weewx:
+            pass
+        else:
+            mqtt_publish(MQTT_HOST,"wf/evt/precip",evt_precip)
+
+    return data
+
+def process_evt_strike(data):
+    if args.limit and args.limit != "evt_strike": return
+    if args.raw: print_raw(data)
+
+    evt_strike = {}
+                                                      # skip serial_number
+                                                      # skip hub_sn
+    evt_strike["timestamp"] = data["evt"][0]
+    evt_strike["distance"]  = data["evt"][1]          # km
+    evt_strike["energy"]    = data["evt"][2]          # no units documented
+
+    if args.decoded:
+        print ("evt_strike     => ", end='')
+        print (" ts  = "       + str(evt_strike["timestamp"]), end='')
+        print (" distance  = " + str(evt_strike["distance"]), end='')
+        print (" energy  = "   + str(evt_strike["energy"]), end='')
+        print ('')
+
+    if args.mqtt:
+        if args.weewx:
+            pass
+        else:
+            mqtt_publish(MQTT_HOST,"wf/evt/strike",evt_strike)
+
+    return data
+
 def process_rapid_wind(data):
     if args.limit and ("rapid_wind" not in args.limit): return
     if args.raw: print_raw(data)
 
     rapid_wind = {}
+                                                      # skip serial_number
+                                                      # skip hub_sn
     rapid_wind['timestamp']  = data["ob"][0]
-    rapid_wind['speed']      = data["ob"][1]           # meters/second
-    rapid_wind['direction']  = data["ob"][2]           # degrees
+    rapid_wind['speed']      = data["ob"][1]          # meters/second
+    rapid_wind['direction']  = data["ob"][2]          # degrees
 
     # no need to map to weewx, as the obs_sky wind data already
     # reports the max rapid_wind_speed between obs_sky intervals
@@ -83,6 +148,8 @@ def process_obs_air(data):
     if args.raw: print_raw(data)
 
     obs_air = {}
+                                                                        # skip serial_number
+                                                                        # skip hub_sn
     obs_air["timestamp"]                     = data["obs"][0][0]
     obs_air["station_pressure"]              = data["obs"][0][1]        # MB
     obs_air["temperature"]                   = data["obs"][0][2]        # deg-C
@@ -123,6 +190,8 @@ def process_obs_sky(data):
     if args.raw: print_raw(data)
 
     obs_sky = {}
+                                                                     # skip serial_number
+                                                                     # skip hub_sn
     obs_sky["timestamp"]                   = data["obs"][0][0]
     obs_sky["illuminance"]                 = data["obs"][0][1]       # lux
     obs_sky["uv"]                          = data["obs"][0][2]       # index
@@ -181,10 +250,11 @@ def process_device_status(data):
             device_type = "unknown_type"
 
     device_status = {}
+                                                                   # skip hub_sn
     device_status["device"]            = device_type
     device_status["timestamp"]         = data["timestamp"]
-    device_status["uptime"]            = data["uptime"]              # seconds
-    device_status["voltage"]           = data["voltage"]             # volts
+    device_status["uptime"]            = data["uptime"]            # seconds
+    device_status["voltage"]           = data["voltage"]           # volts
     device_status["firmware_revision"] = data["firmware_revision"]
     device_status["rssi"]              = data["rssi"]
     device_status["hub_rssi"]          = data["hub_rssi"]
@@ -229,7 +299,8 @@ def process_hub_status(data):
     if args.raw: print_raw(data)
 
     hub_status = {}
-    hub_status["device"]              = "hub"
+                                                                   # skip serial_number
+    hub_status["device"]              = "hub"                      # (future use for this program)
     hub_status["firmware_revision"]   = data["firmware_revision"]
     hub_status["uptime"]              = data["uptime"]             # seconds
     hub_status["rssi"]                = data["rssi"]
@@ -263,50 +334,6 @@ def process_hub_status(data):
             pass
         else:
             mqtt_publish(MQTT_HOST,"wf/status/hub",hub_status)
-
-    return data
-
-def process_evt_strike(data):
-    if args.limit and args.limit != "evt_strike": return
-    if args.raw: print_raw(data)
-
-    evt_strike = {}
-    evt_strike["timestamp"] = data["evt"][0]
-    evt_strike["distance"]  = data["evt"][1]          # km
-    evt_strike["energy"]    = data["evt"][2]          # no units documented
-
-    if args.decoded:
-        print ("evt_strike     => ", end='')
-        print (" ts  = "       + str(evt_strike["timestamp"]), end='')
-        print (" distance  = " + str(evt_strike["distance"]), end='')
-        print (" energy  = "   + str(evt_strike["energy"]), end='')
-        print ('')
-
-    if args.mqtt:
-        if args.weewx:
-            pass
-        else:
-            mqtt_publish(MQTT_HOST,"wf/evt/strike",evt_strike)
-
-    return data
-
-def process_evt_precip(data):
-    if args.limit and args.limit != "evt_precip": return
-    if args.raw: print_raw(data)
-
-    evt_precip = {}
-    evt_precip["timestamp"] = data["evt"][0]
-
-    if args.decoded:
-        print ("evt_precip     => ", end='')
-        print (" ts  = " + str(evt_precip["timestamp"]), end='')
-        print ('')
-
-    if args.mqtt:
-        if args.weewx:
-            pass
-        else:
-            mqtt_publish(MQTT_HOST,"wf/evt/precip",evt_precip)
 
     return data
 
@@ -407,8 +434,8 @@ for --limit, possibilities are:
         # readability for the time being.....
         #
 
-        if   data["type"] == "evt_strike":    process_evt_strike(data)
-        elif data["type"] == "evt_precip":    process_evt_precip(data)
+        if   data["type"] == "evt_precip":    process_evt_precip(data)
+        elif data["type"] == "evt_strike":    process_evt_strike(data)
         elif data["type"] == "rapid_wind":    process_rapid_wind(data)
         elif data["type"] == "obs_air":       process_obs_air(data)
         elif data["type"] == "obs_sky":       process_obs_sky(data)
