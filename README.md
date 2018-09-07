@@ -8,6 +8,8 @@ This is a quick listener for the WeatherFlow UDP broadcasts that can:
  * publish to MQTT
  * optionally mapped to match WeeWX schema
 
+NOTE - this requires at least v91 of the WeatherFlow hub firmware.
+
 ## Installation
 
 This requires installing the paho mqtt python library. On a debian(ish) system that can be done by:
