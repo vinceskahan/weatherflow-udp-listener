@@ -220,7 +220,7 @@ def process_obs_sky(data):
 
     if args.decoded:
         print ("obs_sky        => ", end='')
-        print (" timestamp  = "        + str(obs_sky["time_epoch"]) ,  end='')
+        print (" timestamp  = "        + str(obs_sky["timestamp"]) ,  end='')
         print (" uv  = "               + str(obs_sky["uv"]) , end='')
         print (" rain_accumulated  = " + str(obs_sky["rain_accumulated"]) , end='')
         print (" wind_lull = "         + str(obs_sky["wind_lull"]) , end='')
