@@ -64,7 +64,7 @@ MQTT_CLIENT_ID = "weatherflow"
 #
 
 def process_evt_precip(data):
-    if args.limit and args.limit != "evt_precip": return
+    if args.limit and ("evt_precip" not in args.limit): return
     if args.raw: print_raw(data)
 
     evt_precip = {}
@@ -86,7 +86,7 @@ def process_evt_precip(data):
     return data
 
 def process_evt_strike(data):
-    if args.limit and args.limit != "evt_strike": return
+    if args.limit and ("evt_strike" not in args.limit): return
     if args.raw: print_raw(data)
 
     evt_strike = {}
@@ -238,7 +238,7 @@ def process_obs_sky(data):
     return data
 
 def process_device_status(data):
-    if args.limit and args.limit != "device_status": return
+    if args.limit and ("device_status" not in args.limit): return
     if args.raw: print_raw(data)
 
     # both outside devices use the same status schema
@@ -295,7 +295,7 @@ def process_device_status(data):
     return data
 
 def process_hub_status(data):
-    if args.limit and args.limit != "hub_status": return
+    if args.limit and ("hub_status" not in args.limit): return
     if args.raw: print_raw(data)
 
     hub_status = {}
