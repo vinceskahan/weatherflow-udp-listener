@@ -301,7 +301,7 @@ def process_hub_status(data):
     hub_status = {}
                                                                    # skip serial_number
     hub_status["device"]              = "hub"                      # (future use for this program)
-    hub_status["firmware_revision"]   = data["firmware_revision"]
+    hub_status["firmware_revision"]   = int(data["firmware_revision"])
     hub_status["uptime"]              = data["uptime"]             # seconds
     hub_status["rssi"]                = data["rssi"]
     hub_status["timestamp"]           = data["timestamp"]
