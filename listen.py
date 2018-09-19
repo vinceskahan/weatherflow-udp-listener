@@ -450,6 +450,9 @@ for --limit, possibilities are:
     print ("done")
 
     print ("listening for broadcasts..")
+    if args.syslog:
+        loginf("starting to process messages")
+
     while 1:
         msg=s.recvfrom(1024)
         data=json.loads(msg[0])      # this is the JSON payload
