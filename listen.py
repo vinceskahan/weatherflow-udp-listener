@@ -22,6 +22,7 @@ optional arguments:
   -h, --help            show this help message and exit
   -r, --raw             print raw data to stddout
   -d, --decoded         print decoded data to stdout
+  -s, --syslog          syslog unexpected data received
   -l LIMIT, --limit LIMIT
                         limit to one obs type
   -i, --indent          indent raw data to stdout (requires -d)
@@ -46,6 +47,7 @@ import paho.mqtt.publish as publish
 import sys, time
 from socket import *
 import json
+import syslog
 
 # weatherflow broadcasts on this port
 MYPORT = 50222
@@ -54,6 +56,25 @@ MYPORT = 50222
 MQTT_HOST = "mqtt"
 MQTT_PORT = 1883
 MQTT_CLIENT_ID = "weatherflow"
+
+
+# syslog routines (reused with thanks from weewx examples)
+#   severity low->high:
+#          DEBUG INFO WARNING ERROR CRITICAL
+#
+
+def logmsg(level, msg):
+    syslog.syslog(level, '[wf-udp-listener]: %s' % msg)
+
+def logdbg(msg):
+    logmsg(syslog.LOG_DEBUG, msg)
+
+def loginf(msg):
+    logmsg(syslog.LOG_INFO, msg)
+
+def logerr(msg):
+    logmsg(syslog.LOG_ERR, msg)
+
 
 #----------------
 #
@@ -385,6 +406,7 @@ for --limit, possibilities are:
 
     parser.add_argument("-r", "--raw",     dest="raw",     action="store_true", help="print raw data to stddout")
     parser.add_argument("-d", "--decoded", dest="decoded", action="store_true", help="print decoded data to stdout")
+    parser.add_argument("-s", "--syslog",  dest="syslog",  action="store_true", help="syslog unexpected data received")
     parser.add_argument("-l", "--limit",   dest="limit",   action="store",      help="limit to one obs type")
 
     parser.add_argument("-i", "--indent",  dest="indent",  action="store_true", help="indent raw data to stdout (requires -d)")
@@ -442,7 +464,12 @@ for --limit, possibilities are:
         elif data["type"] == "device_status": process_device_status(data)
         elif data["type"] == "hub_status":    process_hub_status(data)
         else:
-           print ("ERROR: unknown data['type'] in", data)
+           # this catches 'lack of' a data["type"] in the data as well
+           print ("ERROR: unknown data type in", data)
+           if args.syslog:
+             message = "unknown data type in " + json.dumps(data,sort_keys=True)
+             loginf(message);
+
 
         # we have our data updated with weewx-mapped content by now
         # so print it out if there was anything mapped to weewx fields
