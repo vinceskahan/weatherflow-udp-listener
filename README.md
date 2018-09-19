@@ -46,6 +46,13 @@ for --limit, possibilities are:
 Typically it is expected that this script would be used to generate MQTT publish messages via running as daemon ala:
 ```
 nohup python /usr/local/bin/listen.py --mqtt  -l "obs_sky obs_air" >/dev/null 2>&1 &
+(limit to only two observations)
+
+nohup python /usr/local/bin/listen.py --mqtt  -x "rapid_wind"      >/dev/null 2>&1 &
+(exclude an observation type)
+
+nohup python /usr/local/bin/listen.py --mqtt  -s -x "rapid_wind"      >/dev/null 2>&1 &
+(exclude an observation type, syslog unknown data received)
 
 ```
 
@@ -88,6 +95,12 @@ python listen.py --limit obs_sky,obs_air
 python listen.py --limit "obs_sky obs_air"
 ```
 
+You can also exclude observations, processing everything else, ala:
+```
+python listen.py --exclude "rapid_wind"
+```
+
+
 #### Reformatting the JSON data for easier interpretation
 The --indent option reformats the output to be a little more readable...
 ```
@@ -117,6 +130,12 @@ listening for broadcasts..
   "type": "rapid_wind"
 }
 ```
+
+### Syslogging unexpected JSON received
+
+The --syslog option will syslog any received JSON data that has an unknown or missing device["type"].
+You almost certainly do 'not' want to use this option and also specify the --indent option, as the
+default JSON dumped will be a (long) one-liner suitable for syslog.
 
 ### Publishing to MQTT
 
