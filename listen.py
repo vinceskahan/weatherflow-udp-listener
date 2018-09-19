@@ -24,7 +24,9 @@ optional arguments:
   -d, --decoded         print decoded data to stdout
   -s, --syslog          syslog unexpected data received
   -l LIMIT, --limit LIMIT
-                        limit to one obs type
+                        limit obs type(s) processed
+  -x EXCLUDE, --exclude EXCLUDE
+                        exclude obs type(s) from being processed
   -i, --indent          indent raw data to stdout (requires -d)
   -m, --mqtt            publish to MQTT
   -n, --no_pub          report but do not publish to MQTT
@@ -85,6 +87,7 @@ def logerr(msg):
 #
 
 def process_evt_precip(data):
+    if args.exclude and ("evt_precip" in args.exclude): return
     if args.limit and ("evt_precip" not in args.limit): return
     if args.raw: print_raw(data)
 
@@ -107,6 +110,7 @@ def process_evt_precip(data):
     return data
 
 def process_evt_strike(data):
+    if args.exclude and ("evt_strike" in args.exclude): return
     if args.limit and ("evt_strike" not in args.limit): return
     if args.raw: print_raw(data)
 
@@ -133,6 +137,7 @@ def process_evt_strike(data):
     return data
 
 def process_rapid_wind(data):
+    if args.exclude and ("rapid_wind" in args.exclude): return
     if args.limit and ("rapid_wind" not in args.limit): return
     if args.raw: print_raw(data)
 
@@ -165,6 +170,7 @@ def process_rapid_wind(data):
     return data
 
 def process_obs_air(data):
+    if args.exclude and ("obs_air" in args.exclude): return
     if args.limit and ("obs_air" not in args.limit): return
     if args.raw: print_raw(data)
 
@@ -207,6 +213,7 @@ def process_obs_air(data):
     return data
 
 def process_obs_sky(data):
+    if args.exclude and ("obs_sky" in args.exclude): return
     if args.limit and ("obs_sky" not in args.limit): return
     if args.raw: print_raw(data)
 
@@ -259,6 +266,7 @@ def process_obs_sky(data):
     return data
 
 def process_device_status(data):
+    if args.exclude and ("device_status" in args.exclude): return
     if args.limit and ("device_status" not in args.limit): return
     if args.raw: print_raw(data)
 
@@ -316,6 +324,7 @@ def process_device_status(data):
     return data
 
 def process_hub_status(data):
+    if args.exclude and ("hub_status" in args.exclude): return
     if args.limit and ("hub_status" not in args.limit): return
     if args.raw: print_raw(data)
 
@@ -407,7 +416,8 @@ for --limit, possibilities are:
     parser.add_argument("-r", "--raw",     dest="raw",     action="store_true", help="print raw data to stddout")
     parser.add_argument("-d", "--decoded", dest="decoded", action="store_true", help="print decoded data to stdout")
     parser.add_argument("-s", "--syslog",  dest="syslog",  action="store_true", help="syslog unexpected data received")
-    parser.add_argument("-l", "--limit",   dest="limit",   action="store",      help="limit to one obs type")
+    parser.add_argument("-l", "--limit",   dest="limit",   action="store",      help="limit obs type(s) processed")
+    parser.add_argument("-x", "--exclude", dest="exclude", action="store",      help="exclude obs type(s) from being processed")
 
     parser.add_argument("-i", "--indent",  dest="indent",  action="store_true", help="indent raw data to stdout (requires -d)")
 
