@@ -45,13 +45,13 @@ for --limit, possibilities are:
 
 Typically it is expected that this script would be used to generate MQTT publish messages via running as daemon ala:
 ```
-nohup python /usr/local/bin/listen.py --mqtt  -l "obs_sky obs_air" >/dev/null 2>&1 &
+nohup python /usr/local/bin/listen.py --mqtt  --limit "obs_sky obs_air" >/dev/null 2>&1 &
 (limit to only two observations)
 
-nohup python /usr/local/bin/listen.py --mqtt  -x "rapid_wind"      >/dev/null 2>&1 &
+nohup python /usr/local/bin/listen.py --mqtt  --exclude "rapid_wind"      >/dev/null 2>&1 &
 (exclude an observation type)
 
-nohup python /usr/local/bin/listen.py --mqtt  -s -x "rapid_wind"      >/dev/null 2>&1 &
+nohup python /usr/local/bin/listen.py --mqtt  --syslog --exclude "rapid_wind"      >/dev/null 2>&1 &
 (exclude an observation type, syslog unknown data received)
 
 ```
