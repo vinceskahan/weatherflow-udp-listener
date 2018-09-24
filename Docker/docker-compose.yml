@@ -1,0 +1,11 @@
+version: '3'
+services:
+
+#--- WeatherFlow broadcasts to udp/50222 ---
+
+  wfudp:
+    build: wfudp
+    container_name: wfudp
+    ports:
+      - "50222:50222/udp"
+
