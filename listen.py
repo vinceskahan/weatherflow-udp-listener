@@ -58,7 +58,7 @@ MYPORT = 50222
 MQTT_HOST = "mqtt"
 MQTT_PORT = 1883
 MQTT_CLIENT_ID = "weatherflow"
-
+MQTT_TOPLEVEL_TOPIC = "wfdocker"
 
 # syslog routines (reused with thanks from weewx examples)
 #   severity low->high:
@@ -105,7 +105,8 @@ def process_evt_precip(data):
         if args.weewx:
             pass
         else:
-            mqtt_publish(MQTT_HOST,"wf/evt/precip",evt_precip)
+            topic = MQTT_TOPLEVEL_TOPIC + "/evt/precip"
+            mqtt_publish(MQTT_HOST,topic,evt_precip)
 
     return data
 
@@ -132,7 +133,8 @@ def process_evt_strike(data):
         if args.weewx:
             pass
         else:
-            mqtt_publish(MQTT_HOST,"wf/evt/strike",evt_strike)
+            topic = MQTT_TOPLEVEL_TOPIC + "/evt/strike"
+            mqtt_publish(MQTT_HOST,topic,evt_strike)
 
     return data
 
@@ -165,7 +167,8 @@ def process_rapid_wind(data):
         if args.weewx:
             pass
         else:
-            mqtt_publish(MQTT_HOST,"wf/rapid_wind",rapid_wind)
+            topic = MQTT_TOPLEVEL_TOPIC + "/rapid_wind"
+            mqtt_publish(MQTT_HOST,topic,rapid_wind)
 
     return data
 
@@ -206,9 +209,11 @@ def process_obs_air(data):
 
     if args.mqtt:
         if args.weewx:
-            mqtt_publish(MQTT_HOST,"wf/weewx",data["weewx"])
+            topic = MQTT_TOPLEVEL_TOPIC + "/weewx"
+            mqtt_publish(MQTT_HOST,topic,data["weewx"])
         else:
-            mqtt_publish(MQTT_HOST,"wf/obs/air",obs_air)
+            topic = MQTT_TOPLEVEL_TOPIC + "/obs_air"
+            mqtt_publish(MQTT_HOST,topic,obs_air)
 
     return data
 
@@ -259,9 +264,11 @@ def process_obs_sky(data):
 
     if args.mqtt:
         if args.weewx:
-            mqtt_publish(MQTT_HOST,"wf/weewx",data["weewx"])
+            topic = MQTT_TOPLEVEL_TOPIC + "/weewx"
+            mqtt_publish(MQTT_HOST,topic,data["weewx"])
         else:
-            mqtt_publish(MQTT_HOST,"wf/obs/sky",obs_sky)
+            topic = MQTT_TOPLEVEL_TOPIC + "/obs_sky"
+            mqtt_publish(MQTT_HOST,topic,obs_sky)
 
     return data
 
@@ -314,11 +321,11 @@ def process_device_status(data):
         print ('')
 
     # construct the status topic to publish to
-    topic = "wf/status/" + device_type
     if args.mqtt:
         if args.weewx:
             pass
         else:
+            topic = MQTT_TOPLEVEL_TOPIC + "/status/" + device_type
             mqtt_publish(MQTT_HOST,topic,device_status)
 
     return data
@@ -363,7 +370,8 @@ def process_hub_status(data):
         if args.weewx:
             pass
         else:
-            mqtt_publish(MQTT_HOST,"wf/status/hub",hub_status)
+            topic = MQTT_TOPLEVEL_TOPIC + "/status/hub"
+            mqtt_publish(MQTT_HOST,topic,hub_status)
 
     return data
 
