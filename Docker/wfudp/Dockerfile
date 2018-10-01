@@ -4,13 +4,19 @@
 #
 # tested on a MacbookAir running HighSierra 10.13.6
 #
+# cleanup of apt remnants courtesy of:
+#  https://gist.github.com/marvell/7c812736565928e602c4
 
 
-FROM debian
+#FROM debian
+FROM python:2.7.15-slim
 MAINTAINER Vince Skahan "vinceskahan@gmail.com"
 RUN apt-get update \
-    && apt-get install -y python-minimal python git wget curl python-pip \
-    && pip install paho-mqtt
+    && apt-get install -y wget \
+    && pip install paho-mqtt \
+    && apt-get clean autoclean \
+    && apt-get autoremove --yes \
+    && rm -rf /var/lib/{apt,dpkg,cache,log}/
 
 ##### uncomment only 'one' of the 'RUN' or 'ADD' lines here
 ##### to select whether you want to build the default listener
