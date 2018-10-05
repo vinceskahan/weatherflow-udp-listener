@@ -63,7 +63,7 @@ MYPORT = 50222
 MQTT_HOST = "mqtt"
 MQTT_PORT = 1883
 MQTT_CLIENT_ID = "weatherflow"
-MQTT_TOPLEVEL_TOPIC = "wfdocker"
+MQTT_TOPLEVEL_TOPIC = "wf"
 
 # syslog routines (reused with thanks from weewx examples)
 #   severity low->high:
