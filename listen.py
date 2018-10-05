@@ -16,7 +16,8 @@
 #----------------
 #
 """
-usage: listen.py [-h] [-r] [-d] [-l LIMIT] [-i] [-m] [-n] [-w]
+usage: listen.py [-h] [-r] [-d] [-s] [-l LIMIT] [-x EXCLUDE] [-i] [-m] [-n]
+                 [-w] [-b MQTT_BROKER] [-t MQTT_TOPIC]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -31,6 +32,10 @@ optional arguments:
   -m, --mqtt            publish to MQTT
   -n, --no_pub          report but do not publish to MQTT
   -w, --weewx           convert to weewx schema mapping
+  -b MQTT_BROKER, --mqtt_broker MQTT_BROKER
+                        MQTT broker hostname
+  -t MQTT_TOPIC, --mqtt_topic MQTT_TOPIC
+                        MQTT topic to post to
 
 for --limit, possibilities are:
    rapid_wind, obs_sky, obs_air,
@@ -433,6 +438,9 @@ for --limit, possibilities are:
     parser.add_argument("-n", "--no_pub",  dest="no_pub",  action="store_true", help="report but do not publish to MQTT")
     parser.add_argument("-w", "--weewx",   dest="weewx",   action="store_true", help="convert to weewx schema mapping")
 
+    parser.add_argument("-b", "--mqtt_broker", dest="mqtt_broker", action="store", help="MQTT broker hostname")
+    parser.add_argument("-t", "--mqtt_topic",  dest="mqtt_topic",  action="store", help="MQTT topic to post to")
+
     args = parser.parse_args()
 
     if (args.indent) and (not args.raw):
@@ -449,6 +457,12 @@ for --limit, possibilities are:
         parser.print_usage()
         print ()
         sys.exit(1)
+
+    if args.mqtt_broker:
+        MQTT_HOST = args.mqtt_broker
+
+    if args.mqtt_topic:
+        MQTT_TOPLEVEL_TOPIC = args.mqtt_topic
 
     print ("setting up socket - ", end='')
     s = socket(AF_INET, SOCK_DGRAM)
