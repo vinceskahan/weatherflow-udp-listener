@@ -468,6 +468,7 @@ for --limit, possibilities are:
     s = socket(AF_INET, SOCK_DGRAM)
     s.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
     s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+    s.setblocking(False)
     s.bind(('', MYPORT))
     print ("done")
 
@@ -475,7 +476,13 @@ for --limit, possibilities are:
     if args.syslog:
         loginf("starting to process messages")
 
+    # idea of this try/except along with s.setblockign(False) above
+    # is to loop and therefore listen faster although it is uncertain
+    # if it really makes much of a quantifiable difference versus
+    # the default python behavior
+
     while 1:
+      try:
         msg=s.recvfrom(1024)
         data=json.loads(msg[0])      # this is the JSON payload
 
@@ -508,9 +515,9 @@ for --limit, possibilities are:
 
         # we have our data updated with weewx-mapped content by now
         # so print it out if there was anything mapped to weewx fields
-#        if args.weewx and len(data["weewx"]) and (args.decoded or args.raw):
-#                print ("main: ",json.dumps(data["weewx"],sort_keys=True))
 
+      except:
+        pass
 
 #
 # that's all folks
