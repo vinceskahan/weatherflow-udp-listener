@@ -20,19 +20,26 @@ sudo apt-get install -y python-pip && sudo pip install paho-mqtt
 ##  Usage
 
 ```
-usage: listen.py [-h] [-r] [-d] [-l LIMIT] [-i] [-m] [-n] [-w]
 
+usage: listen.py [-h] [-r] [-d] [-s] [-l LIMIT] [-x EXCLUDE] [-i] [-m] [-n]
+                 [-w] [-b MQTT_BROKER] [-t MQTT_TOPIC]
 optional arguments:
   -h, --help            show this help message and exit
   -r, --raw             print raw data to stddout
   -d, --decoded         print decoded data to stdout
+  -s, --syslog          syslog unexpected data received
   -l LIMIT, --limit LIMIT
-                        limit to one obs type
+                        limit obs type(s) processed
+  -x EXCLUDE, --exclude EXCLUDE
+                        exclude obs type(s) from being processed
   -i, --indent          indent raw data to stdout (requires -d)
   -m, --mqtt            publish to MQTT
   -n, --no_pub          report but do not publish to MQTT
   -w, --weewx           convert to weewx schema mapping
-
+  -b MQTT_BROKER, --mqtt_broker MQTT_BROKER
+                        MQTT broker hostname
+  -t MQTT_TOPIC, --mqtt_topic MQTT_TOPIC
+                        MQTT topic to post to
 for --limit, possibilities are:
    rapid_wind, obs_sky, obs_air,
    hub_status, device_status, evt_precip, evt_strike
