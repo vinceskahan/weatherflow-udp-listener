@@ -7,5 +7,10 @@ services:
     build: wfudp
     container_name: wfudp
     ports:
-      - "50222:50222/udp"
-
+     - "50222:50222/udp"
+    # this is a hack, my DNS resolution is messed
+    # up on the Docker runtime host at this time
+    #  - if your container can resolve 'mqtt'
+    #    then this is not needed
+    extra_hosts:
+      - "mqtt:192.168.1.169"
