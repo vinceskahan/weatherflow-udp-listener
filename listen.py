@@ -483,6 +483,7 @@ for --limit, possibilities are:
 
     while 1:
       try:
+        time.sleep(0.01)             # no need to eat the cpu up needlessly
         msg=s.recvfrom(1024)
         data=json.loads(msg[0])      # this is the JSON payload
 
