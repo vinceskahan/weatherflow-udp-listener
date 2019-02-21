@@ -63,7 +63,7 @@ for --limit, possibilities are:
 
 ## Example usage
 * [Typical usage scenarios](#Typical-Usage-Scenarios)
-* [Debugging your WeatherFlow SmartWeather station](#Debugging-your-WeatherFlow-SmartWeather-Station)
+* [Debugging your WeatherFlow SmartWeather station](#debugging-your-weatherflow-hub-sky-and-air)
   * Printing out unaltered data received from the station broadcasts
   * Decoding the station data into a more human-friendly format
   * Limiting the output to one observation/status/event type
