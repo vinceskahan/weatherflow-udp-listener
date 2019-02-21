@@ -62,16 +62,16 @@ for --limit, possibilities are:
 ---
 
 ## Example usage
-* [Typical usage examples](#typical_usage_examples)
-* [Debugging your WeatherFlow SmartWeather station](#debugging)
+* [Typical usage scenarios](#Typical-Usage-Scenarios)
+* [Debugging your WeatherFlow SmartWeather station](#Debugging-your-WeatherFlow-SmartWeather-Station)
   * Printing out unaltered data received from the station broadcasts
   * Decoding the station data into a more human-friendly format
   * Limiting the output to one observation/status/event type
   * Reformatting the JSON data for easier interpretation
   * Syslogging unexpected JSON received
-* [Publishing to MQTT](#publishing_to_mqtt)
-* [Decoding WeatherFlow data into WeeWX terminology](#weewx_terminology)
-* [Mosquitto MQTT Client Primer](#mosquitto_primer)
+* [Publishing to MQTT](#Publishing-to-MQTT)
+* [Decoding WeatherFlow data into WeeWX terminology](#Decoding-WeatherFlow-data-into-Weewx-terminology)
+* [Mosquitto MQTT Client Primer](#Mosquitto-MQTT-Client-Primer)
   * Subscribing to MQTT published topics
     * WeatherFlow MQTT topics (non-weewx format)
     * WeatherFlow MQTT topics (weewx format)
@@ -79,7 +79,7 @@ for --limit, possibilities are:
 
 ---
 
-<a name="#typical_usage_scenarios"></a>
+<a name="#Typical-Usage-Scenarios"></a>
 ## Typical Usage Scenarios
 
 Typically it is expected that this script would be used to generate MQTT publish messages for a MQTT broker to make available for consuming devices.  You can do so as follows:
@@ -105,7 +105,7 @@ FWIW, the author typically runs the first variant above by simply putting the co
 
 ---
 
-<a name="#debugging"></a>
+<a name="#Debugging-your-WeatherFlow-hub-sky-and-air"></a>
 ### Debugging your WeatherFlow hub, sky, and air
 
 Running the listener interactively can help debug the health and realtime observations of your WeatherFlow station.
@@ -189,7 +189,7 @@ default JSON dumped will be a (long) one-liner suitable for syslog.
 
 ---
 
-<a name="#publishing_to_mqtt"></a>
+<a name="#Publishing-to-MQTT"></a>
 ### Publishing to MQTT
 
 The --mqtt option publishes JSON to MQTT.
@@ -227,7 +227,7 @@ The listener defaults to publishing MQTT topics to a host named 'mqtt' on your l
 
 
 ---
-<a name="#weewx_terminology"></a>
+<a name="#Decoding-WeatherFlow-data-into-WeeWX-terminology"></a>
 ### Decoding WeatherFlow data into WeeWX terminology
 
 The --weewx option maps WeatherFlow variable names to WeeWX-compatible parameter names, matching the WeeWX schema. Only some observations from the Air and Sky have mappings to WeeWX fields, so many of the available WeatherFlow measurements are skipped.
@@ -264,10 +264,10 @@ publishing to mqtt://mqtt/wf/weewx
 ---
 ---
 
-<a name="#mosquitto_primer"></a>
+<a name="#Mosquitto-MQTT-client-primer"></a>
 ## Mosquitto MQTT client primer
 
-While documenting mosquitto-mqtt, or any other MQTT client/broker, is out of scope for this document in the general sense, the following are some examples of how you might do so using mosquitto-mqtt assuming you have published topics to MQTT using the --listener option to this listener.
+While documenting mosquitto-mqtt, or any other MQTT client/broker, is out of scope for this document in the general sense, the following are some examples of how you might do so using mosquitto-mqtt assuming you have published topics to MQTT using the --mqtt option to this listener.
 
 ##### WeatherFlow MQTT topics (non-weewx format)
 
