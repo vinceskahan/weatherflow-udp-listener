@@ -18,7 +18,7 @@ NOTE - this requires at least v91 of the WeatherFlow hub firmware.
 ##### Known limitations - multiple 'live' network interfaces
 * The listener by default binds to all active network interfaces, so if you have multiple live network interfaces on the same subnet, it is possible that you will 'hear' multiple copies of the UDP broadcasts.
 
-  * The author has experienced this on a Intel NUC running Ubuntu 18.04LTS, although it does not seem to be the default behavior on the raspberry pi running Raspbian.  The workaround, of course, is to disable wifi if you have a wired computer.
+  * The author has experienced this on a Intel NUC running Ubuntu 18.04LTS, although it does not seem to be the default behavior on the raspberry pi running Raspbian.  The preferred workaround, of course, is to disable wifi if you have a wired computer.  The listener also supports an optional `--address x.x.x.x` parameter where you can hard-set the ip address of the interface on the runtime host that you want to listen on.
 
 ---
 ## Installation
@@ -52,6 +52,8 @@ optional arguments:
                         MQTT broker hostname
   -t MQTT_TOPIC, --mqtt_topic MQTT_TOPIC
                         MQTT topic to post to
+  -a ADDRESS, --address ADDRESS
+                        address to listen on
   -v, --verbose         verbose output to watch the threads
 
 for --limit, possibilities are:
