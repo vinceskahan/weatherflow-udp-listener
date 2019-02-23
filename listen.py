@@ -36,6 +36,8 @@ optional arguments:
                         MQTT broker hostname
   -t MQTT_TOPIC, --mqtt_topic MQTT_TOPIC
                         MQTT topic to post to
+  -a ADDRESS, --address ADDRESS
+                        address to listen on
   -v, --verbose         verbose output to watch the threads
 
 for --limit, possibilities are:
@@ -68,11 +70,14 @@ from socket import *
 # weatherflow broadcasts on this port
 MYPORT = 50222
 
+# by default listen on all interfaces and addresses
+ADDRESS = ''                       # supersede this with --address
+
 # FQDN of the host to publish mqtt messages to
-MQTT_HOST = "mqtt"
-MQTT_PORT = 1883
+MQTT_HOST = "mqtt"                 # supersede this with --mqtt-broker
+MQTT_TOPLEVEL_TOPIC = "wf"         # supersede this with --mqtt-topic
 MQTT_CLIENT_ID = "weatherflow"
-MQTT_TOPLEVEL_TOPIC = "wf"
+MQTT_PORT = 1883
 
 # syslog routines (reused with thanks from weewx examples)
 #   severity low->high:
@@ -543,6 +548,7 @@ for --limit, possibilities are:
 
     parser.add_argument("-b", "--mqtt_broker", dest="mqtt_broker", action="store", help="MQTT broker hostname")
     parser.add_argument("-t", "--mqtt_topic",  dest="mqtt_topic",  action="store", help="MQTT topic to post to")
+    parser.add_argument("-a", "--address",     dest="mqtt_topic",  action="store", help="address to listen on")
 
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="verbose mode - show threads")
 
@@ -569,6 +575,9 @@ for --limit, possibilities are:
     if args.mqtt_topic:
         MQTT_TOPLEVEL_TOPIC = args.mqtt_topic
 
+    if args.address:
+        ADDRESS = args.address
+
     # the socket
     if args.verbose:
       print("setting up socket - ", end='')
@@ -576,7 +585,7 @@ for --limit, possibilities are:
     s.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
     s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     s.setblocking(False)
-    s.bind(('', MYPORT))
+    s.bind((ADDRESS, MYPORT))
     if args.verbose:
       print("socket set up")
 
