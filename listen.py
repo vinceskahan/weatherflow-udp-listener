@@ -548,7 +548,7 @@ for --limit, possibilities are:
 
     parser.add_argument("-b", "--mqtt_broker", dest="mqtt_broker", action="store", help="MQTT broker hostname")
     parser.add_argument("-t", "--mqtt_topic",  dest="mqtt_topic",  action="store", help="MQTT topic to post to")
-    parser.add_argument("-a", "--address",     dest="mqtt_topic",  action="store", help="address to listen on")
+    parser.add_argument("-a", "--address",     dest="address",     action="store", help="address to listen on")
 
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="verbose mode - show threads")
 
