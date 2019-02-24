@@ -64,8 +64,13 @@ import syslog
 import time
 import threading
 import os
-from queue import Queue      #--- python2 is from 'Queue'
 from socket import *
+
+# this is different between python2 and python3
+if (sys.version_info > (3, 0)):
+  from queue import Queue
+else:
+  from Queue import Queue
 
 # weatherflow broadcasts on this port
 MYPORT = 50222
@@ -590,7 +595,10 @@ for --limit, possibilities are:
       print("socket set up")
 
     # the main thread
-    thread_name = threading.main_thread().name
+    if (sys.version_info > (3,0)):
+      thread_name = threading.main_thread().name
+    else:
+      thread_name = threading.current_thread().name
     thread_pid  = format(os.getpid())
     if args.verbose:
       print("starting main thread: " + thread_name + " pid = " + thread_pid)
