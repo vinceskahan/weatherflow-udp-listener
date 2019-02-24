@@ -12,7 +12,7 @@ NOTE - this requires at least v91 of the WeatherFlow hub firmware.
 
 ##### Version 2.x Important notes
 
-* The listener now requires python3. All examples below have been updated accordingly.
+* The listener now supports python3. All examples below have been updated accordingly.
 * Typical output has been significantly quieted down, with debugging output suppressed unless you use the --verbose flag
 
 ##### Known limitations - multiple 'live' network interfaces
@@ -23,10 +23,14 @@ NOTE - this requires at least v91 of the WeatherFlow hub firmware.
 ---
 ## Installation
 
-This requires installing the paho mqtt python3 library.  
+This requires installing the paho mqtt python library.  
 On a debian(ish) system that can be done by:
 ```
+# for python3
 sudo apt-get install -y python3-pip && sudo pip3 install paho-mqtt
+
+# for python2
+sudo apt-get install -y python-pip  && sudo pip  install paho-mqtt
 ```
 
 ##  Usage
