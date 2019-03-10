@@ -15,6 +15,15 @@ NOTE - this requires at least v91 of the WeatherFlow hub firmware.
 * The listener now supports python3. All examples below have been updated accordingly.
 * Typical output has been significantly quieted down, with debugging output suppressed unless you use the --verbose flag
 
+
+##### Python3 version notes
+* This code works on python 2.7,9 or later
+* It tests ok on ubuntu using python 3.6.7
+* It does 'not' seem to work on Raspbian using python 3.5.3
+* It tets ok on the same Raspbian using a self-compiled python 3.7.0
+
+
+
 ##### Known limitations - multiple 'live' network interfaces
 * The listener by default binds to all active network interfaces, so if you have multiple live network interfaces on the same subnet, it is possible that you will 'hear' multiple copies of the UDP broadcasts.
 
