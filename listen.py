@@ -66,10 +66,10 @@ import threading
 import os
 from socket import *
 
-# this is different between python2 and python3
-if (sys.version_info > (3, 0)):
+# python3 renamed it to 'queue'
+try:
   from queue import Queue
-else:
+except:
   from Queue import Queue
 
 # weatherflow broadcasts on this port
