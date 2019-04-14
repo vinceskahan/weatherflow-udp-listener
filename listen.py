@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # WeatherFlow listener
 #
@@ -14,7 +14,7 @@
 #             your mileage might vary....
 #
 #----------------
-#
+
 """
 usage: listen.py [-h] [-r] [-d] [-s] [-l LIMIT] [-x EXCLUDE] [-i] [-m] [-n]
                  [-w] [-b MQTT_BROKER] [-t MQTT_TOPIC]
@@ -36,34 +36,53 @@ optional arguments:
                         MQTT broker hostname
   -t MQTT_TOPIC, --mqtt_topic MQTT_TOPIC
                         MQTT topic to post to
+  -a ADDRESS, --address ADDRESS
+                        address to listen on
+  -v, --verbose         verbose output to watch the threads
 
 for --limit, possibilities are:
    rapid_wind, obs_sky, obs_air,
    hub_status, device_status, evt_precip, evt_strike
 """
+
 #----------------
 #
 # compatibility notes:
 #   - The v91 API uses 'timestamp' in one place and 'time_epoch' in all others
 #     For consistency, this program uses 'timestamp' everywhere in decoded output
 
+# uncomment for python2
 from __future__ import print_function
+
+import argparse
+import datetime
+import json
 import paho.mqtt.client  as mqtt
 import paho.mqtt.publish as publish
-
-import sys, time
-from socket import *
-import json
+import sys
 import syslog
+import time
+import threading
+import os
+from socket import *
+
+# python3 renamed it to 'queue'
+try:
+  from queue import Queue
+except:
+  from Queue import Queue
 
 # weatherflow broadcasts on this port
 MYPORT = 50222
 
+# by default listen on all interfaces and addresses
+ADDRESS = ''                       # supersede this with --address
+
 # FQDN of the host to publish mqtt messages to
-MQTT_HOST = "mqtt"
-MQTT_PORT = 1883
+MQTT_HOST = "mqtt"                 # supersede this with --mqtt-broker
+MQTT_TOPLEVEL_TOPIC = "wf"         # supersede this with --mqtt-topic
 MQTT_CLIENT_ID = "weatherflow"
-MQTT_TOPLEVEL_TOPIC = "wf"
+MQTT_PORT = 1883
 
 # syslog routines (reused with thanks from weewx examples)
 #   severity low->high:
@@ -81,7 +100,6 @@ def loginf(msg):
 
 def logerr(msg):
     logmsg(syslog.LOG_ERR, msg)
-
 
 #----------------
 #
@@ -115,6 +133,8 @@ def process_evt_precip(data):
 
     return data
 
+#----------------
+
 def process_evt_strike(data):
     if args.exclude and ("evt_strike" in args.exclude): return
     if args.limit and ("evt_strike" not in args.limit): return
@@ -142,6 +162,8 @@ def process_evt_strike(data):
             mqtt_publish(MQTT_HOST,topic,evt_strike)
 
     return data
+
+#----------------
 
 def process_rapid_wind(data):
     if args.exclude and ("rapid_wind" in args.exclude): return
@@ -176,6 +198,8 @@ def process_rapid_wind(data):
             mqtt_publish(MQTT_HOST,topic,rapid_wind)
 
     return data
+
+#----------------
 
 def process_obs_air(data):
     if args.exclude and ("obs_air" in args.exclude): return
@@ -212,6 +236,10 @@ def process_obs_air(data):
         print (" lightning_avg_km  = " + str(obs_air["lightning_strike_avg_distance"]), end='')
         print ('')
 
+    if args.weewx:
+      if args.verbose:
+          print_raw(data["weewx"])
+
     if args.mqtt:
         if args.weewx:
             topic = MQTT_TOPLEVEL_TOPIC + "/weewx"
@@ -221,6 +249,8 @@ def process_obs_air(data):
             mqtt_publish(MQTT_HOST,topic,obs_air)
 
     return data
+
+#----------------
 
 def process_obs_sky(data):
     if args.exclude and ("obs_sky" in args.exclude): return
@@ -267,6 +297,10 @@ def process_obs_sky(data):
         print (" wind_direction = "    + str(obs_sky["wind_direction"]) , end='')
         print ('')
 
+    if args.weewx:
+      if args.verbose:
+          print_raw(data["weewx"])
+
     if args.mqtt:
         if args.weewx:
             topic = MQTT_TOPLEVEL_TOPIC + "/weewx"
@@ -276,6 +310,8 @@ def process_obs_sky(data):
             mqtt_publish(MQTT_HOST,topic,obs_sky)
 
     return data
+
+#----------------
 
 def process_device_status(data):
     if args.exclude and ("device_status" in args.exclude): return
@@ -335,6 +371,8 @@ def process_device_status(data):
 
     return data
 
+#----------------
+
 def process_hub_status(data):
     if args.exclude and ("hub_status" in args.exclude): return
     if args.limit and ("hub_status" not in args.limit): return
@@ -380,6 +418,8 @@ def process_hub_status(data):
 
     return data
 
+#----------------
+
 def mqtt_publish(mqtt_host,mqtt_topic,data):
     print ("publishing to mqtt://%s/%s" % (mqtt_host, mqtt_topic))
     if args.no_pub:
@@ -403,6 +443,8 @@ def mqtt_publish(mqtt_host,mqtt_topic,data):
 
     return
 
+#----------------
+
 def print_raw(data):
         if args.raw:
             if args.indent:
@@ -413,10 +455,81 @@ def print_raw(data):
             next
 
 
+#---------
+
+def listener_task(q):
+    thread_name = threading.current_thread().name
+    thread_pid  = format(os.getpid())
+    if args.verbose:
+      print("starting thread: " + thread_name + " pid = " + thread_pid)
+
+    # this is lame, but it's the listener
+    while 1:
+      try:
+        msg=s.recvfrom(1024)
+        data=json.loads(msg[0])      # this is the JSON payload
+        q.put(data)                  # save in the queue  (do this 5 times to prove the queue queues)
+        if args.verbose:
+            print("-------------")
+            print(thread_name + ": " + str(datetime.datetime.now()) + " " + json.dumps(data,sort_keys=True))
+      except:
+        pass
+      time.sleep(0.01)
+
+    print("listener_task done")
+
+#---------
+
+def reporter_task(q):
+    thread_name = threading.current_thread().name
+    thread_pid  = format(os.getpid())
+    if args.verbose:
+      print("starting thread: " + thread_name + " pid = " + thread_pid)
+
+    while 1:
+      try:
+        while not q.empty():
+          data = q.get()
+          if args.verbose:
+            print(thread_name + ": " + str(datetime.datetime.now()) + " " + json.dumps(data,sort_keys=True))
+          report_it(data)
+      except:
+        pass
+      time.sleep(0.01)
+      ####time.sleep(30)        # uncomment to see the queue queueing
+
+def report_it(data):
+
+    #
+    # this matches https://weatherflow.github.io/SmartWeather/api/udp/v91/
+    # in the order shown on that page....
+    #
+    # yes tearing apart the pieces could be done 'cooler' via enumerating
+    # a sensor map ala the WeatherflowUDP weewx driver, but lets go for
+    # readability for the time being.....
+    #
+    if args.weewx:
+      data['weewx'] = {}
+
+    if   data["type"] == "evt_precip":    process_evt_precip(data)
+    elif data["type"] == "evt_strike":    process_evt_strike(data)
+    elif data["type"] == "rapid_wind":    process_rapid_wind(data)
+    elif data["type"] == "obs_air":       process_obs_air(data)
+    elif data["type"] == "obs_sky":       process_obs_sky(data)
+    elif data["type"] == "device_status": process_device_status(data)
+    elif data["type"] == "hub_status":    process_hub_status(data)
+    else:
+       # this catches 'lack of' a data["type"] in the data as well
+       print ("ERROR: unknown data type in", data)
+       if args.syslog:
+         message = "unknown data type in " + json.dumps(data,sort_keys=True)
+         loginf(message);
+
+#---------
+
 if __name__ == "__main__":
 
-    import argparse
-
+    # argument parsing is u.g.l.y it ain't got no alibi, it's ugly !
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
@@ -440,6 +553,9 @@ for --limit, possibilities are:
 
     parser.add_argument("-b", "--mqtt_broker", dest="mqtt_broker", action="store", help="MQTT broker hostname")
     parser.add_argument("-t", "--mqtt_topic",  dest="mqtt_topic",  action="store", help="MQTT topic to post to")
+    parser.add_argument("-a", "--address",     dest="address",     action="store", help="address to listen on")
+
+    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="verbose mode - show threads")
 
     args = parser.parse_args()
 
@@ -464,61 +580,56 @@ for --limit, possibilities are:
     if args.mqtt_topic:
         MQTT_TOPLEVEL_TOPIC = args.mqtt_topic
 
-    print ("setting up socket - ", end='')
+    if args.address:
+        ADDRESS = args.address
+
+    # the socket
+    if args.verbose:
+      print("setting up socket - ", end='')
     s = socket(AF_INET, SOCK_DGRAM)
     s.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
     s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     s.setblocking(False)
-    s.bind(('', MYPORT))
-    print ("done")
+    s.bind((ADDRESS, MYPORT))
+    if args.verbose:
+      print("socket set up")
 
-    print ("listening for broadcasts..")
-    if args.syslog:
-        loginf("starting to process messages")
+    # the main thread
+    if (sys.version_info > (3,0)):
+      thread_name = threading.main_thread().name
+    else:
+      thread_name = threading.current_thread().name
+    thread_pid  = format(os.getpid())
+    if args.verbose:
+      print("starting main thread: " + thread_name + " pid = " + thread_pid)
 
-    # idea of this try/except along with s.setblockign(False) above
-    # is to loop and therefore listen faster although it is uncertain
-    # if it really makes much of a quantifiable difference versus
-    # the default python behavior
+    # define the queue
+    q = Queue(maxsize=0)
+    q.join()
 
-    while 1:
-      try:
-        time.sleep(0.01)             # no need to eat the cpu up needlessly
-        msg=s.recvfrom(1024)
-        data=json.loads(msg[0])      # this is the JSON payload
+    # define the threads
+    threads = [
+        threading.Thread(target=listener_task, name='listener', args=(q,)),
+        threading.Thread(target=reporter_task, name='reporter', args=(q,)),
+    ]
 
-        # initialize weewx keys in data
-        if args.weewx:
-            data['weewx'] = {}
-        #
-        # this matches https://weatherflow.github.io/SmartWeather/api/udp/v91/
-        # in the order shown on that page....
-        #
-        # yes tearing apart the pieces could be done 'cooler' via enumerating
-        # a sensor map ala the WeatherflowUDP weewx driver, but lets go for
-        # readability for the time being.....
-        #
+    # start them up
+    for t in threads:
+        t.start()
 
-        if   data["type"] == "evt_precip":    process_evt_precip(data)
-        elif data["type"] == "evt_strike":    process_evt_strike(data)
-        elif data["type"] == "rapid_wind":    process_rapid_wind(data)
-        elif data["type"] == "obs_air":       process_obs_air(data)
-        elif data["type"] == "obs_sky":       process_obs_sky(data)
-        elif data["type"] == "device_status": process_device_status(data)
-        elif data["type"] == "hub_status":    process_hub_status(data)
-        else:
-           # this catches 'lack of' a data["type"] in the data as well
-           print ("ERROR: unknown data type in", data)
-           if args.syslog:
-             message = "unknown data type in " + json.dumps(data,sort_keys=True)
-             loginf(message);
+    # wait for them to finish
+    for t in threads:
+        t.join()
+
+    if args.verbose:
+      print()
+      print("done")
 
 
-        # we have our data updated with weewx-mapped content by now
-        # so print it out if there was anything mapped to weewx fields
+#############
 
-      except:
-        pass
+sys.exit(0)
+
 
 #
 # that's all folks
