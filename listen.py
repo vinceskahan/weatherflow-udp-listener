@@ -38,6 +38,17 @@ optional arguments:
                         MQTT topic to post to
   -a ADDRESS, --address ADDRESS
                         address to listen on
+  --influxdb            publish to influxdb
+  --influxdb_host INFLUXDB_HOST
+                        hostname of InfluxDB HTTP API
+  --influxdb_port INFLUXDB_PORT
+                        hostname of InfluxDB HTTP API
+  --influxdb_user INFLUXDB_USER
+                        InfluxDB username
+  --influxdb_pass INFLUXDB_PASS
+                        InfluxDB password
+  --influxdb_db INFLUXDB_DB
+                        InfluxDB database name
   -v, --verbose         verbose output to watch the threads
 
 for --limit, possibilities are:
@@ -65,6 +76,8 @@ import time
 import threading
 import os
 from socket import *
+
+from influxdb import InfluxDBClient
 
 # python3 renamed it to 'queue'
 try:
@@ -130,6 +143,13 @@ def process_evt_precip(data):
         else:
             topic = MQTT_TOPLEVEL_TOPIC + "/evt/precip"
             mqtt_publish(MQTT_HOST,topic,evt_precip)
+    if args.influxdb:
+        if args.weewx:
+            pass
+        else:
+            # influxdb needs a field to put in the db besides a timestamp
+            evt_precip["start"] = 1
+            influxdb_publish('precip', evt_precip)
 
     return data
 
@@ -160,6 +180,12 @@ def process_evt_strike(data):
         else:
             topic = MQTT_TOPLEVEL_TOPIC + "/evt/strike"
             mqtt_publish(MQTT_HOST,topic,evt_strike)
+
+    if args.influxdb:
+        if args.weewx:
+            pass
+        else:
+            influxdb_publish('strike', evt_strike)
 
     return data
 
@@ -196,6 +222,12 @@ def process_rapid_wind(data):
         else:
             topic = MQTT_TOPLEVEL_TOPIC + "/rapid_wind"
             mqtt_publish(MQTT_HOST,topic,rapid_wind)
+
+    if args.influxdb:
+        if args.weewx:
+            pass
+        else:
+            influxdb_publish('rapid_wind', rapid_wind)
 
     return data
 
@@ -248,6 +280,12 @@ def process_obs_air(data):
             topic = MQTT_TOPLEVEL_TOPIC + "/obs_air"
             mqtt_publish(MQTT_HOST,topic,obs_air)
 
+    if args.influxdb:
+        if args.weewx:
+            influxdb_publish('obs_air', data["weewx"])
+        else:
+            influxdb_publish('obs_air', obs_air)
+
     return data
 
 #----------------
@@ -271,7 +309,7 @@ def process_obs_sky(data):
     obs_sky["battery"]                     = data["obs"][0][8]       # volts
     obs_sky["report_interval"]             = data["obs"][0][9]       # minutes
     obs_sky["solar_radiation"]             = data["obs"][0][10]      # W/m^2
-                                                                     # local_rain_day_accumulation does not work in v91 of their firmware
+                                                                     # Rain per day is not calculated locally
     obs_sky["precipitation_type"]          = data["obs"][0][12]      # 0=none, 1=rain, 2=hail
     obs_sky["wind_sample_interval"]        = data["obs"][0][13]      # seconds
     obs_sky["firmware_revision"]           = data["firmware_revision"]
@@ -308,6 +346,12 @@ def process_obs_sky(data):
         else:
             topic = MQTT_TOPLEVEL_TOPIC + "/obs_sky"
             mqtt_publish(MQTT_HOST,topic,obs_sky)
+
+    if args.influxdb:
+        if args.weewx:
+            influxdb_publish('obs_sky', data["weewx"])
+        else:
+            influxdb_publish('obs_sky', obs_sky)
 
     return data
 
@@ -369,6 +413,9 @@ def process_device_status(data):
             topic = MQTT_TOPLEVEL_TOPIC + "/status/" + device_type
             mqtt_publish(MQTT_HOST,topic,device_status)
 
+    if args.influxdb:
+        influxdb_publish('device_status', device_status)
+
     return data
 
 #----------------
@@ -416,6 +463,14 @@ def process_hub_status(data):
             topic = MQTT_TOPLEVEL_TOPIC + "/status/hub"
             mqtt_publish(MQTT_HOST,topic,hub_status)
 
+    if args.influxdb:
+        if args.weewx:
+            pass
+        else:
+            hub_status.pop("fs", None) # An array
+            hub_status.pop("mqtt_stats", None) # An array
+            influxdb_publish('hub_status', hub_status)
+
     return data
 
 #----------------
@@ -442,6 +497,36 @@ def mqtt_publish(mqtt_host,mqtt_topic,data):
             protocol=mqtt.MQTTv311)
 
     return
+
+def influxdb_publish(event, data):
+
+    try:
+        client = InfluxDBClient(host=args.influxdb_host,
+                                port=args.influxdb_port,
+                                username=args.influxdb_user,
+                                password=args.influxdb_pass,
+                                database=args.influxdb_db)
+        payload = {}
+        payload['measurement'] = event
+
+        if args.weewx:
+            payload['time'] = data['dateTime']
+            data.pop('dateTime', None)
+        else:
+            payload['time'] = data['timestamp']
+            data.pop('timestamp', None)
+
+        payload['fields'] = data
+
+        if args.verbose:
+            print ("publishing to influxdb [%s:%s]: %s" % (args.influxdb_host, args.influxdb_port, payload))
+
+        # write_points() allows us to pass in a precision with the timestamp
+        client.write_points([payload], time_precision='s')
+    except Exception as e:
+        print("Failed to connect to InfluxDB: %s" % e)
+        print("  Payload was: %s" % payload)
+
 
 #----------------
 
@@ -518,6 +603,10 @@ def report_it(data):
     elif data["type"] == "obs_sky":       process_obs_sky(data)
     elif data["type"] == "device_status": process_device_status(data)
     elif data["type"] == "hub_status":    process_hub_status(data)
+    # Skip undocumented debug types
+    elif data["type"] == "wind_debug":    pass
+    elif data["type"] == "light_debug":   pass
+    elif data["type"] == "rain_debug":    pass
     else:
        # this catches 'lack of' a data["type"] in the data as well
        print ("ERROR: unknown data type in", data)
@@ -555,6 +644,13 @@ for --limit, possibilities are:
     parser.add_argument("-t", "--mqtt_topic",  dest="mqtt_topic",  action="store", help="MQTT topic to post to")
     parser.add_argument("-a", "--address",     dest="address",     action="store", help="address to listen on")
 
+    parser.add_argument("--influxdb",  dest="influxdb", action="store_true", help="publish to influxdb")
+    parser.add_argument("--influxdb_host", dest="influxdb_host", action="store", default="localhost", help="hostname of InfluxDB HTTP API")
+    parser.add_argument("--influxdb_port", dest="influxdb_port", action="store", default=8086, type=int, help="hostname of InfluxDB HTTP API")
+    parser.add_argument("--influxdb_user", dest="influxdb_user", action="store", help="InfluxDB username")
+    parser.add_argument("--influxdb_pass", dest="influxdb_pass", action="store", help="InfluxDB password")
+    parser.add_argument("--influxdb_db", dest="influxdb_db", action="store", default="smartweather", help="InfluxDB database name")
+
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="verbose mode - show threads")
 
     args = parser.parse_args()
@@ -565,10 +661,10 @@ for --limit, possibilities are:
         print ()
         sys.exit(1)
 
-    if (not args.mqtt) and (not args.decoded) and (not args.weewx) and (not args.raw):
+    if (not args.mqtt) and (not args.decoded) and (not args.weewx) and (not args.raw) and (not args.influxdb):
         print ("\n#")
         print ("# exiting - must specify at least one option")
-        print ("#           --raw, --decoded, --mqtt, and/or --weewx")
+        print ("#           --raw, --decoded, --mqtt, --influxdb, and/or --weewx")
         print ("#\n")
         parser.print_usage()
         print ()

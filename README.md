@@ -32,14 +32,14 @@ NOTE - this requires at least v91 of the WeatherFlow hub firmware.
 ---
 ## Installation
 
-This requires installing the paho mqtt python library.  
+This requires installing the paho mqtt python library.
 On a debian(ish) system that can be done by:
 ```
 # for python3
-sudo apt-get install -y python3-pip && sudo pip3 install paho-mqtt
+sudo apt-get install -y python3-pip && sudo pip3 install paho-mqtt influxdb
 
 # for python2
-sudo apt-get install -y python-pip  && sudo pip  install paho-mqtt
+sudo apt-get install -y python-pip  && sudo pip  install paho-mqtt influxdb
 ```
 
 ##  Usage
@@ -67,6 +67,17 @@ optional arguments:
                         MQTT topic to post to
   -a ADDRESS, --address ADDRESS
                         address to listen on
+  --influxdb            publish to influxdb
+  --influxdb_host INFLUXDB_HOST
+                        hostname of InfluxDB HTTP API
+  --influxdb_port INFLUXDB_PORT
+                        hostname of InfluxDB HTTP API
+  --influxdb_user INFLUXDB_USER
+                        InfluxDB username
+  --influxdb_pass INFLUXDB_PASS
+                        InfluxDB password
+  --influxdb_db INFLUXDB_DB
+                        InfluxDB database name
   -v, --verbose         verbose output to watch the threads
 
 for --limit, possibilities are:
