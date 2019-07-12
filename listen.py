@@ -32,7 +32,8 @@ optional arguments:
   -x EXCLUDE, --exclude EXCLUDE
                         exclude obs type(s) from being processed
   -i, --indent          indent raw data to stdout (requires -d)
-  -m, --mqtt            publish to MQTT
+  -m, --mqtt            publish to MQTT (one air/sky)
+  -M, --multi-mqtt      specify there are multiple air/sky present
   -n, --no_pub          report but do not publish to MQTT
   -b MQTT_BROKER, --mqtt_broker MQTT_BROKER
                         MQTT broker hostname
@@ -128,6 +129,8 @@ def process_evt_precip(data):
 
     if args.mqtt:
         topic = MQTT_TOPLEVEL_TOPIC + "/evt/precip"
+        if args.mqtt_multisensor:
+            topic = "/sensors/" + serial_number + "/" + topic
         mqtt_publish(MQTT_HOST,topic,evt_precip)
 
     return data
@@ -155,6 +158,8 @@ def process_evt_strike(data):
 
     if args.mqtt:
         topic = MQTT_TOPLEVEL_TOPIC + "/evt/strike"
+        if args.mqtt_multisensor:
+            topic = "/sensors/" + serial_number + "/" + topic
         mqtt_publish(MQTT_HOST,topic,evt_strike)
 
     return data
@@ -182,6 +187,8 @@ def process_rapid_wind(data):
 
     if args.mqtt:
         topic = MQTT_TOPLEVEL_TOPIC + "/rapid_wind"
+        if args.mqtt_multisensor:
+            topic = "/sensors/" + serial_number + "/" + topic
         mqtt_publish(MQTT_HOST,topic,rapid_wind)
 
     return data
@@ -218,6 +225,8 @@ def process_obs_air(data):
 
     if args.mqtt:
         topic = MQTT_TOPLEVEL_TOPIC + "/obs_air"
+        if args.mqtt_multisensor:
+            topic = "/sensors/" + serial_number + "/" + topic
         mqtt_publish(MQTT_HOST,topic,obs_air)
 
     return data
@@ -261,6 +270,8 @@ def process_obs_sky(data):
 
     if args.mqtt:
         topic = MQTT_TOPLEVEL_TOPIC + "/obs_sky"
+        if args.mqtt_multisensor:
+            topic = "/sensors/" + serial_number + "/" + topic
         mqtt_publish(MQTT_HOST,topic,obs_sky)
 
     return data
@@ -319,6 +330,8 @@ def process_device_status(data):
     # construct the status topic to publish to
     if args.mqtt:
         topic = MQTT_TOPLEVEL_TOPIC + "/status/" + device_type
+        if args.mqtt_multisensor:
+            topic = "/sensors/" + serial_number + "/" + topic
         mqtt_publish(MQTT_HOST,topic,device_status)
 
     return data
@@ -365,6 +378,8 @@ def process_hub_status(data):
 
     if args.mqtt:
         topic = MQTT_TOPLEVEL_TOPIC + "/status/hub"
+        if args.mqtt_multisensor:
+            topic = "/sensors/" + serial_number + "/" + topic
         mqtt_publish(MQTT_HOST,topic,hub_status)
 
     return data
@@ -496,7 +511,9 @@ for --limit, possibilities are:
 
     parser.add_argument("-i", "--indent",  dest="indent",  action="store_true", help="indent raw data to stdout (requires -d)")
 
-    parser.add_argument("-m", "--mqtt",    dest="mqtt",    action="store_true", help="publish to MQTT")
+    parser.add_argument("-m", "--mqtt",       dest="mqtt",             action="store_true", help="publish to MQTT")
+    parser.add_argument("-M", "--multi-mqtt", dest="mqtt_multisensor", action="store_true", help="specify there are multiple air/sky present")
+
     parser.add_argument("-n", "--no_pub",  dest="no_pub",  action="store_true", help="report but do not publish to MQTT")
 
     parser.add_argument("-b", "--mqtt_broker", dest="mqtt_broker", action="store", help="MQTT broker hostname")
