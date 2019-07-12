@@ -31,7 +31,6 @@ optional arguments:
   -i, --indent          indent raw data to stdout (requires -d)
   -m, --mqtt            publish to MQTT
   -n, --no_pub          report but do not publish to MQTT
-  -w, --weewx           convert to weewx schema mapping
   -b MQTT_BROKER, --mqtt_broker MQTT_BROKER
                         MQTT broker hostname
   -t MQTT_TOPIC, --mqtt_topic MQTT_TOPIC
@@ -125,11 +124,8 @@ def process_evt_precip(data):
         print ('')
 
     if args.mqtt:
-        if args.weewx:
-            pass
-        else:
-            topic = MQTT_TOPLEVEL_TOPIC + "/evt/precip"
-            mqtt_publish(MQTT_HOST,topic,evt_precip)
+        topic = MQTT_TOPLEVEL_TOPIC + "/evt/precip"
+        mqtt_publish(MQTT_HOST,topic,evt_precip)
 
     return data
 
@@ -155,11 +151,8 @@ def process_evt_strike(data):
         print ('')
 
     if args.mqtt:
-        if args.weewx:
-            pass
-        else:
-            topic = MQTT_TOPLEVEL_TOPIC + "/evt/strike"
-            mqtt_publish(MQTT_HOST,topic,evt_strike)
+        topic = MQTT_TOPLEVEL_TOPIC + "/evt/strike"
+        mqtt_publish(MQTT_HOST,topic,evt_strike)
 
     return data
 
@@ -177,10 +170,6 @@ def process_rapid_wind(data):
     rapid_wind['speed']      = data["ob"][1]          # meters/second
     rapid_wind['direction']  = data["ob"][2]          # degrees
 
-    # no need to map to weewx, as the obs_sky wind data already
-    # reports the max rapid_wind_speed between obs_sky intervals
-    # as the wind gust speed
-
     if args.decoded:
         print ("rapid_wind     => ", end='')
         print (" ts  = " + str(rapid_wind['timestamp']), end='')
@@ -188,14 +177,9 @@ def process_rapid_wind(data):
         print (" dir = " + str(rapid_wind['direction']), end='')
         print ('')
 
-    # we don't bother reporting rapid_wind if --weewx was specified
-    # since obs_sky has that info already when that period comes around again
     if args.mqtt:
-        if args.weewx:
-            pass
-        else:
-            topic = MQTT_TOPLEVEL_TOPIC + "/rapid_wind"
-            mqtt_publish(MQTT_HOST,topic,rapid_wind)
+        topic = MQTT_TOPLEVEL_TOPIC + "/rapid_wind"
+        mqtt_publish(MQTT_HOST,topic,rapid_wind)
 
     return data
 
@@ -219,13 +203,6 @@ def process_obs_air(data):
     obs_air["report_interval"]               = data["obs"][0][7]        # minutes
     obs_air["firmware_revision"]             = data["firmware_revision"]
 
-    if args.weewx:
-        data["weewx"]["dateTime"]             = obs_air["timestamp"]
-        data["weewx"]["pressure"]             = obs_air["station_pressure"]
-        data["weewx"]["outTemp"]              = obs_air["temperature"]
-        data["weewx"]["outHumidity"]          = obs_air["relative_humidity"]
-        data["weewx"]["outTempBatteryStatus"] = obs_air["battery"]
-
     if args.decoded:
         print ("obs_air        => ", end='')
         print (" ts  = "               + str(obs_air["timestamp"]), end='')
@@ -236,17 +213,9 @@ def process_obs_air(data):
         print (" lightning_avg_km  = " + str(obs_air["lightning_strike_avg_distance"]), end='')
         print ('')
 
-    if args.weewx:
-      if args.verbose:
-          print_raw(data["weewx"])
-
     if args.mqtt:
-        if args.weewx:
-            topic = MQTT_TOPLEVEL_TOPIC + "/weewx"
-            mqtt_publish(MQTT_HOST,topic,data["weewx"])
-        else:
-            topic = MQTT_TOPLEVEL_TOPIC + "/obs_air"
-            mqtt_publish(MQTT_HOST,topic,obs_air)
+        topic = MQTT_TOPLEVEL_TOPIC + "/obs_air"
+        mqtt_publish(MQTT_HOST,topic,obs_air)
 
     return data
 
@@ -276,16 +245,6 @@ def process_obs_sky(data):
     obs_sky["wind_sample_interval"]        = data["obs"][0][13]      # seconds
     obs_sky["firmware_revision"]           = data["firmware_revision"]
 
-    if args.weewx:
-        data["weewx"]["dateTime"]          = obs_sky["timestamp"]
-        data["weewx"]["UV"]                = obs_sky["uv"]
-        data["weewx"]["windBatteryStatus"] = obs_sky["battery"]
-        data["weewx"]["radiation"]         = obs_sky["solar_radiation"]
-        data["weewx"]["windGust"]          = obs_sky["wind_gust"]
-        data["weewx"]["windSpeed"]         = obs_sky["wind_avg"]
-        data["weewx"]["wind_direction"]    = obs_sky["wind_direction"]
-        data["weewx"]["rain"]              = obs_sky["rain_accumulated"]
-
     if args.decoded:
         print ("obs_sky        => ", end='')
         print (" timestamp  = "        + str(obs_sky["timestamp"]) ,  end='')
@@ -297,17 +256,9 @@ def process_obs_sky(data):
         print (" wind_direction = "    + str(obs_sky["wind_direction"]) , end='')
         print ('')
 
-    if args.weewx:
-      if args.verbose:
-          print_raw(data["weewx"])
-
     if args.mqtt:
-        if args.weewx:
-            topic = MQTT_TOPLEVEL_TOPIC + "/weewx"
-            mqtt_publish(MQTT_HOST,topic,data["weewx"])
-        else:
-            topic = MQTT_TOPLEVEL_TOPIC + "/obs_sky"
-            mqtt_publish(MQTT_HOST,topic,obs_sky)
+        topic = MQTT_TOPLEVEL_TOPIC + "/obs_sky"
+        mqtt_publish(MQTT_HOST,topic,obs_sky)
 
     return data
 
@@ -363,11 +314,8 @@ def process_device_status(data):
 
     # construct the status topic to publish to
     if args.mqtt:
-        if args.weewx:
-            pass
-        else:
-            topic = MQTT_TOPLEVEL_TOPIC + "/status/" + device_type
-            mqtt_publish(MQTT_HOST,topic,device_status)
+        topic = MQTT_TOPLEVEL_TOPIC + "/status/" + device_type
+        mqtt_publish(MQTT_HOST,topic,device_status)
 
     return data
 
@@ -410,11 +358,8 @@ def process_hub_status(data):
         print ('')
 
     if args.mqtt:
-        if args.weewx:
-            pass
-        else:
-            topic = MQTT_TOPLEVEL_TOPIC + "/status/hub"
-            mqtt_publish(MQTT_HOST,topic,hub_status)
+        topic = MQTT_TOPLEVEL_TOPIC + "/status/hub"
+        mqtt_publish(MQTT_HOST,topic,hub_status)
 
     return data
 
@@ -508,8 +453,6 @@ def report_it(data):
     # a sensor map ala the WeatherflowUDP weewx driver, but lets go for
     # readability for the time being.....
     #
-    if args.weewx:
-      data['weewx'] = {}
 
     if   data["type"] == "evt_precip":    process_evt_precip(data)
     elif data["type"] == "evt_strike":    process_evt_strike(data)
@@ -549,7 +492,6 @@ for --limit, possibilities are:
 
     parser.add_argument("-m", "--mqtt",    dest="mqtt",    action="store_true", help="publish to MQTT")
     parser.add_argument("-n", "--no_pub",  dest="no_pub",  action="store_true", help="report but do not publish to MQTT")
-    parser.add_argument("-w", "--weewx",   dest="weewx",   action="store_true", help="convert to weewx schema mapping")
 
     parser.add_argument("-b", "--mqtt_broker", dest="mqtt_broker", action="store", help="MQTT broker hostname")
     parser.add_argument("-t", "--mqtt_topic",  dest="mqtt_topic",  action="store", help="MQTT topic to post to")
@@ -565,10 +507,10 @@ for --limit, possibilities are:
         print ()
         sys.exit(1)
 
-    if (not args.mqtt) and (not args.decoded) and (not args.weewx) and (not args.raw):
+    if (not args.mqtt) and (not args.decoded) and (not args.raw):
         print ("\n#")
         print ("# exiting - must specify at least one option")
-        print ("#           --raw, --decoded, --mqtt, and/or --weewx")
+        print ("#           --raw, --decoded, --mqtt")
         print ("#\n")
         parser.print_usage()
         print ()
