@@ -130,7 +130,7 @@ def process_evt_precip(data):
     if args.mqtt:
         topic = MQTT_TOPLEVEL_TOPIC + "/evt/precip"
         if args.mqtt_multisensor:
-            topic = "/sensors/" + serial_number + "/" + topic
+            topic = "/sensors/" + serial_number + topic
         mqtt_publish(MQTT_HOST,topic,evt_precip)
 
     return data
@@ -159,7 +159,7 @@ def process_evt_strike(data):
     if args.mqtt:
         topic = MQTT_TOPLEVEL_TOPIC + "/evt/strike"
         if args.mqtt_multisensor:
-            topic = "/sensors/" + serial_number + "/" + topic
+            topic = "/sensors/" + serial_number + topic
         mqtt_publish(MQTT_HOST,topic,evt_strike)
 
     return data
@@ -188,7 +188,7 @@ def process_rapid_wind(data):
     if args.mqtt:
         topic = MQTT_TOPLEVEL_TOPIC + "/rapid_wind"
         if args.mqtt_multisensor:
-            topic = "/sensors/" + serial_number + "/" + topic
+            topic = "/sensors/" + serial_number + topic
         mqtt_publish(MQTT_HOST,topic,rapid_wind)
 
     return data
@@ -226,7 +226,7 @@ def process_obs_air(data):
     if args.mqtt:
         topic = MQTT_TOPLEVEL_TOPIC + "/obs_air"
         if args.mqtt_multisensor:
-            topic = "/sensors/" + serial_number + "/" + topic
+            topic = "/sensors/" + serial_number + topic
         mqtt_publish(MQTT_HOST,topic,obs_air)
 
     return data
@@ -271,7 +271,7 @@ def process_obs_sky(data):
     if args.mqtt:
         topic = MQTT_TOPLEVEL_TOPIC + "/obs_sky"
         if args.mqtt_multisensor:
-            topic = "/sensors/" + serial_number + "/" + topic
+            topic = "/sensors/" + serial_number + topic
         mqtt_publish(MQTT_HOST,topic,obs_sky)
 
     return data
@@ -331,7 +331,7 @@ def process_device_status(data):
     if args.mqtt:
         topic = MQTT_TOPLEVEL_TOPIC + "/status/" + device_type
         if args.mqtt_multisensor:
-            topic = "/sensors/" + serial_number + "/" + topic
+            topic = "/sensors/" + serial_number + topic
         mqtt_publish(MQTT_HOST,topic,device_status)
 
     return data
@@ -379,7 +379,7 @@ def process_hub_status(data):
     if args.mqtt:
         topic = MQTT_TOPLEVEL_TOPIC + "/status/hub"
         if args.mqtt_multisensor:
-            topic = "/sensors/" + serial_number + "/" + topic
+            topic = "/sensors/" + serial_number + topic
         mqtt_publish(MQTT_HOST,topic,hub_status)
 
     return data
