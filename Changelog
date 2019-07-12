@@ -1,0 +1,16 @@
+
+
+Version 3.0
+ - the (hopefully) unused 'weewx' option has been removed
+ - now supports multiple sensors of the same type (two Sky, for example)
+   for publishing to MQTT
+
+
+Version 2.0
+ - app is threaded in order to no miss listenining for UDP messages
+   while writing to stdout or MQTT.  Previously there was a small
+   possibility that messages could have been missed. Now it is 'very' small.
+
+Version 1.0.9
+ - original tagged release
+
