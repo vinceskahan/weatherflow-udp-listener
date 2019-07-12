@@ -5,7 +5,6 @@ This is a quick listener for the WeatherFlow UDP broadcasts that can:
  * print the received UDP broadcasts to stdout
  * print the decoded broadcasts in a more human-friendly form
  * publish derived topics to MQTT
- * optionally mapped to match WeeWX schema
 
 NOTE - this requires at least v91 of the WeatherFlow hub firmware.
 
@@ -60,7 +59,6 @@ optional arguments:
   -i, --indent          indent raw data to stdout (requires -d)
   -m, --mqtt            publish to MQTT
   -n, --no_pub          report but do not publish to MQTT
-  -w, --weewx           convert to weewx schema mapping
   -b MQTT_BROKER, --mqtt_broker MQTT_BROKER
                         MQTT broker hostname
   -t MQTT_TOPIC, --mqtt_topic MQTT_TOPIC
@@ -85,11 +83,9 @@ for --limit, possibilities are:
   * Reformatting the JSON data for easier interpretation
   * Syslogging unexpected JSON received
 * [Publishing to MQTT](#Publishing-to-MQTT)
-* [Decoding WeatherFlow data into WeeWX terminology](#Decoding-WeatherFlow-data-into-Weewx-terminology)
 * [Mosquitto MQTT Client Primer](#Mosquitto-MQTT-Client-Primer)
   * Subscribing to MQTT published topics
-    * WeatherFlow MQTT topics (non-weewx format)
-    * WeatherFlow MQTT topics (weewx format)
+    * WeatherFlow MQTT topics
 
 
 ---
@@ -240,43 +236,6 @@ publishing to mqtt://mqtt/wf/rapid_wind
 The listener defaults to publishing MQTT topics to a host named 'mqtt' on your local network. You may supersede this at runtime via the `--broker <broker_hostname_or_ip_here>` option.  See the usage instructions above for details.
 
 
-
----
-<a name="#Decoding-WeatherFlow-data-into-WeeWX-terminology"></a>
-### Decoding WeatherFlow data into WeeWX terminology
-
-The --weewx option maps WeatherFlow variable names to WeeWX-compatible parameter names, matching the WeeWX schema. Only some observations from the Air and Sky have mappings to WeeWX fields, so many of the available WeatherFlow measurements are skipped.
-
-```
-pi@zero:~ $ python3 listen.py --weewx
-
-{"dateTime": 1535821716, "outHumidity": 76, "outTemp": 15.43, "outTempBatteryStatus": 3.48, "pressure": 1010.8}
-{"UV": 4.99, "dateTime": 1535821729, "radiation": 380, "rain": 0.0, "windBatteryStatus": 3.43, "windGust": 1.92, "windSpeed": 1.1, "wind_direction": 275}
-```
-
-Similar to the examples above, adding the --mqtt option 'also' publishes to MQTT.
-
-```
-
-pi@zero:~ $ python3 listen.py --weewx --mqtt
-
-    publishing to mqtt://mqtt/wf/weewx
-    publishing to mqtt://mqtt/wf/weewx
-    publishing to mqtt://mqtt/wf/weewx
-
-```
-
-Adding the --no_pub option will show the JSON that would be published.
-
-```
-pi@zero:~ $ python3 listen.py --weewx --mqtt --no_pub
-
-publishing to mqtt://mqtt/wf/weewx
-     {"dateTime": 1535822375, "outHumidity": 76, "outTemp": 15.8, "outTempBatteryStatus": 3.48, "pressure": 1010.7}
-publishing to mqtt://mqtt/wf/weewx
-     {"UV": 6.19, "dateTime": 1535822388, "radiation": 468, "rain": 0.0, "windBatteryStatus": 3.43, "windGust": 2.5, "windSpeed": 1.44, "wind_direction": 233}
-```
----
 ---
 
 <a name="#Mosquitto-MQTT-client-primer"></a>
@@ -284,7 +243,7 @@ publishing to mqtt://mqtt/wf/weewx
 
 While documenting mosquitto-mqtt, or any other MQTT client/broker, is out of scope for this document in the general sense, the following are some examples of how you might do so using mosquitto-mqtt assuming you have published topics to MQTT using the --mqtt option to this listener.
 
-##### WeatherFlow MQTT topics (non-weewx format)
+##### WeatherFlow MQTT topics 
 
 This gives an example of how to use the mosquitto_sub MQTT client to subscribe to a published topic.   See the mosquito_sub man page for detailed usage of that client.
 
@@ -295,21 +254,6 @@ pi@zero$ mosquitto_sub -t "wf/obs/#" -h mqtt
 {"firmware_revision": 20, "hub_sn": "HB-00010412", "obs": [[1535685379, 1006.8, 18.51, 76, 0, 0, 3.51, 1]], "serial_number": "AR-00013349", "type": "obs_air"}
 
 {"firmware_revision": 43, "hub_sn": "HB-00010412", "obs": [[1535685389, 18, 0.0, 0.0, 0.0, 1.08, 2.06, 258, 3.45, 1, 0, null, 0, 3]], "serial_number": "SK-00013695", "type": "obs_sky"}
-
-```
-
-##### WeatherFlow MQTT topics (weewx format)
-
-If the listener is publishing with the --weewx option specified, all the weewx-compatible topics are on the same MQTT topic for easy subscribing...
-
-
-```
-
-pi@zero$ mosquitto_sub -t "wf/weewx" -h mqtt
-
-{"dateTime": 1535685559, "outHumidity": 77, "outTemp": 18.41, "outTempBatteryStatus": 3.51, "pressure": 1006.8}
-
-{"UV": 0.0, "dateTime": 1535685568, "radiation": 0, "rain": 0.0, "windBatteryStatus": 3.44, "windGust": 1.79, "windSpeed": 0.97, "wind_direction": 216}
 
 ```
 
