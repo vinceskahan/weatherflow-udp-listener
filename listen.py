@@ -13,6 +13,9 @@
 #             While it 'might' work for different firmware,
 #             your mileage might vary....
 #
+# this is updated to v114 of the firmware as documented in
+#   https://weatherflow.github.io/SmartWeather/api/udp/v114/
+#
 #----------------
 
 """
@@ -114,7 +117,7 @@ def process_evt_precip(data):
     if args.raw: print_raw(data)
 
     evt_precip = {}
-                                                      # skip serial_number
+    serial_number = data["serial_number"]
                                                       # skip hub_sn
     evt_precip["timestamp"] = data["evt"][0]
 
@@ -137,7 +140,7 @@ def process_evt_strike(data):
     if args.raw: print_raw(data)
 
     evt_strike = {}
-                                                      # skip serial_number
+    serial_number = data["serial_number"]
                                                       # skip hub_sn
     evt_strike["timestamp"] = data["evt"][0]
     evt_strike["distance"]  = data["evt"][1]          # km
@@ -164,7 +167,7 @@ def process_rapid_wind(data):
     if args.raw: print_raw(data)
 
     rapid_wind = {}
-                                                      # skip serial_number
+    serial_number = data["serial_number"]
                                                       # skip hub_sn
     rapid_wind['timestamp']  = data["ob"][0]
     rapid_wind['speed']      = data["ob"][1]          # meters/second
@@ -191,7 +194,7 @@ def process_obs_air(data):
     if args.raw: print_raw(data)
 
     obs_air = {}
-                                                                        # skip serial_number
+    serial_number = data["serial_number"]
                                                                         # skip hub_sn
     obs_air["timestamp"]                     = data["obs"][0][0]
     obs_air["station_pressure"]              = data["obs"][0][1]        # MB
@@ -227,7 +230,7 @@ def process_obs_sky(data):
     if args.raw: print_raw(data)
 
     obs_sky = {}
-                                                                     # skip serial_number
+    serial_number = data["serial_number"]
                                                                      # skip hub_sn
     obs_sky["timestamp"]                   = data["obs"][0][0]
     obs_sky["illuminance"]                 = data["obs"][0][1]       # lux
@@ -278,6 +281,7 @@ def process_device_status(data):
             device_type = "unknown_type"
 
     device_status = {}
+    serial_number = data["serial_number"]
                                                                    # skip hub_sn
     device_status["device"]            = device_type
     device_status["timestamp"]         = data["timestamp"]
@@ -286,8 +290,8 @@ def process_device_status(data):
     device_status["firmware_revision"] = data["firmware_revision"]
     device_status["rssi"]              = data["rssi"]
     device_status["hub_rssi"]          = data["hub_rssi"]
-    device_status["sensor_status"]     = data["sensor_status"]
-    device_status["debug"]             = data["debug"]              # 0=disabled, 1=enabled
+    device_status["sensor_status"]     = data["sensor_status"]     # enumerated - see API for details
+    device_status["debug"]             = data["debug"]             # 0=disabled, 1=enabled
 
     # sensor_status is an encoded enumeration
     #    0x00000000    all = sensors ok
@@ -327,7 +331,7 @@ def process_hub_status(data):
     if args.raw: print_raw(data)
 
     hub_status = {}
-                                                                   # skip serial_number
+    serial_number = data["serial_number"]
     hub_status["device"]              = "hub"                      # (future use for this program)
     hub_status["firmware_revision"]   = int(data["firmware_revision"])
     hub_status["uptime"]              = data["uptime"]             # seconds
@@ -338,6 +342,8 @@ def process_hub_status(data):
     hub_status["fs"]                  = data["fs"]                 # internal use only
     hub_status["radio_stats_version"] = data["radio_stats"][0]
     hub_status["reboot_count"]        = data["radio_stats"][1]
+    hub_status["i2c_bus_error_count"] = data["radio_stats"][2]
+    hub_status["radio_status"]        = data["radio_stats"][3]     # 0=off, 1=on, 3=active
     hub_status["mqtt_stats"]          = data["mqtt_stats"]         # internal use only
 
     # reset flags are a comma-delimited string with values:
