@@ -6,13 +6,14 @@ This is a quick listener for the WeatherFlow UDP broadcasts that can:
  * print the decoded broadcasts in a more human-friendly form
  * publish derived topics to MQTT
 
-NOTE - this requires at least v91 of the WeatherFlow hub firmware.
+NOTE - This is tested using v114 of the WeatherFlow hub firmware.
 
 
 ##### Version 3.x Important notes
 
-* adds support for multiple Air/Sky devices per hub
-* the --weewx option has been deleted
+* Multiple Air/Sky devices per hub is now supported.  See the -M option below
+* The --weewx option has been deleted
+
 
 ##### Version 2.x Important notes
 
@@ -22,12 +23,12 @@ NOTE - this requires at least v91 of the WeatherFlow hub firmware.
 
 ##### Python version requirements
 
-Use `python --version` to check your python version
+Use `python --version` and `python3 --version` to check your python version
 
-* python2 - works fine on 2.7.9 or later
-* python3 - requires python 3.6.0 or later
+* python2 - version 2.7.9 or later is required
+* python3 - version 3.6.0 or later is required
 
-Raspbian versions based on Debian 10 (do a `cat /etc/debian_version` to check) have a recent enough python3 by default.  You can always compile your own from source if you 'must' use python3 on an earlier os, but I'd recommend just using the built-in python2.  It works 100% the same.
+Raspbian versions based on Debian 10 have a recent enough python3 by default.  You can always compile your own from source if you 'must' use python3 on an earlier os, but I'd recommend just using the built-in python2.  It works 100% the same.
 
 
 ##### Known limitations - multiple 'live' network interfaces
