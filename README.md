@@ -9,18 +9,25 @@ This is a quick listener for the WeatherFlow UDP broadcasts that can:
 NOTE - this requires at least v91 of the WeatherFlow hub firmware.
 
 
+##### Version 3.x Important notes
+
+* adds support for multiple Air/Sky devices per hub
+* the --weewx option has been deleted
+
 ##### Version 2.x Important notes
 
 * The listener now supports python3. All examples below have been updated accordingly.
 * Typical output has been significantly quieted down, with debugging output suppressed unless you use the --verbose flag
 
 
-##### Python3 version notes
-* This code works on python 2.7,9 or later
-* It tests ok on ubuntu using python 3.6.7
-* It does 'not' seem to work on Raspbian using python 3.5.3
-* It tets ok on the same Raspbian using a self-compiled python 3.7.0
+##### Python version requirements
 
+Use `python --version` to check your python version
+
+* python2 - works fine on 2.7.9 or later
+* python3 - requires python 3.6.0 or later
+
+Raspbian versions based on Debian 10 (do a `cat /etc/debian_version` to check) have a recent enough python3 by default.  You can always compile your own from source if you 'must' use python3 on an earlier os, but I'd recommend just using the built-in python2.  It works 100% the same.
 
 
 ##### Known limitations - multiple 'live' network interfaces
@@ -58,6 +65,7 @@ optional arguments:
                         exclude obs type(s) from being processed
   -i, --indent          indent raw data to stdout (requires -d)
   -m, --mqtt            publish to MQTT
+  -M, --multi-mqtt      specify there are multiple air/sky present
   -n, --no_pub          report but do not publish to MQTT
   -b MQTT_BROKER, --mqtt_broker MQTT_BROKER
                         MQTT broker hostname
@@ -235,6 +243,28 @@ publishing to mqtt://mqtt/wf/rapid_wind
 
 The listener defaults to publishing MQTT topics to a host named 'mqtt' on your local network. You may supersede this at runtime via the `--broker <broker_hostname_or_ip_here>` option.  See the usage instructions above for details.
 
+---
+
+#### Support for multiple sensors
+
+Supporting multiple sensors means changing the published topic to something that permits the consumer to tell Sky-A apart from Sky-B, for example.  This can be done by adding the `-M` or `--multi-mqtt` option to your command invocation.   This changes the published topic to `/sensors/<SERIAL_NUMBER>/<TOPIC>` ala:
+
+In this example, note the `-n` option has been added for illustrative purposes only:
+
+```
+
+# typical invocation for a one-Sky one-Air system
+
+$ /usr/bin/python listen.py -m -n --limit "rapid_wind"
+publishing to mqtt://mqtt/wf/rapid_wind
+
+
+# add -M if you have a multi-Sky and/or multi-Air system
+# note the different MQTT topic it publishes to
+
+$ /usr/bin/python listen.py -m -n -M --limit "rapid_wind"
+publishing to mqtt://mqtt/sensors/SK-00013695/wf/rapid_wind
+```
 
 ---
 
