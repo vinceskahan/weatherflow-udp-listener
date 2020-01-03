@@ -146,7 +146,7 @@ def process_evt_precip(data):
         mqtt_publish(MQTT_HOST,topic,evt_precip)
 
     if args.influxdb:
-        influxdb_publish('precip', evt_precip)
+        influxdb_publish('evt_precip', evt_precip)
 
     return data
 
@@ -178,7 +178,7 @@ def process_evt_strike(data):
         mqtt_publish(MQTT_HOST,topic,evt_strike)
 
     if args.influxdb:
-        influxdb_publish('strike', evt_strike)
+        influxdb_publish('evt_strike', evt_strike)
 
     return data
 
