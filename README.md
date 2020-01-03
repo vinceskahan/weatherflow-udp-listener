@@ -39,14 +39,14 @@ Raspbian versions based on Debian 10 have a recent enough python3 by default.  Y
 ---
 ## Installation
 
-This requires installing the paho mqtt python library.  
+This requires installing the paho mqtt and influxsb python libraries.  
 On a debian(ish) system that can be done by:
 ```
 # for python3
-sudo apt-get install -y python3-pip && sudo pip3 install paho-mqtt
+sudo apt-get install -y python3-pip && sudo pip3 install paho-mqtt influxdb
 
 # for python2
-sudo apt-get install -y python-pip  && sudo pip  install paho-mqtt
+sudo apt-get install -y python-pip  && sudo pip  install paho-mqtt influxdb
 ```
 
 ##  Usage
@@ -74,6 +74,17 @@ optional arguments:
                         MQTT topic to post to
   -a ADDRESS, --address ADDRESS
                         address to listen on
+  --influxdb            publish to influxdb
+  --influxdb_host INFLUXDB_HOST
+                        hostname or ip of InfluxDb HTTP API
+  --influxdb_port INFLUXDB_PORT
+                        port of InfluxDb HTTP API
+  --influxdb_user INFLUXDB_USER
+                        InfluxDb username
+  --influxdb_pass INFLUXDB_PASS
+                        InfluxDb password
+  --influxdb_db INFLUXDB_DB
+                        InfluxDb database name
   -v, --verbose         verbose output to watch the threads
 
 for --limit, possibilities are:
@@ -287,5 +298,3 @@ pi@zero$ mosquitto_sub -t "wf/obs/#" -h mqtt
 {"firmware_revision": 43, "hub_sn": "HB-00010412", "obs": [[1535685389, 18, 0.0, 0.0, 0.0, 1.08, 2.06, 258, 3.45, 1, 0, null, 0, 3]], "serial_number": "SK-00013695", "type": "obs_sky"}
 
 ```
-
-
