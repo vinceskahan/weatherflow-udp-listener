@@ -139,14 +139,15 @@ def process_evt_precip(data):
         print (" ts  = " + str(evt_precip["timestamp"]), end='')
         print ('')
 
+    topic = MQTT_TOPLEVEL_TOPIC + "/evt/precip"
+    if args.mqtt_multisensor:
+        topic = "sensors/" + serial_number + "/" + topic
+
     if args.mqtt:
-        topic = MQTT_TOPLEVEL_TOPIC + "/evt/precip"
-        if args.mqtt_multisensor:
-            topic = "sensors/" + serial_number + "/" + topic
         mqtt_publish(MQTT_HOST,topic,evt_precip)
 
     if args.influxdb:
-        influxdb_publish('evt_precip', evt_precip)
+        influxdb_publish(topic, evt_precip)
 
     return data
 
@@ -171,14 +172,15 @@ def process_evt_strike(data):
         print (" energy  = "   + str(evt_strike["energy"]), end='')
         print ('')
 
+    topic = MQTT_TOPLEVEL_TOPIC + "/evt/strike"
+    if args.mqtt_multisensor:
+        topic = "sensors/" + serial_number + "/" + topic
+
     if args.mqtt:
-        topic = MQTT_TOPLEVEL_TOPIC + "/evt/strike"
-        if args.mqtt_multisensor:
-            topic = "sensors/" + serial_number + "/" + topic
         mqtt_publish(MQTT_HOST,topic,evt_strike)
 
     if args.influxdb:
-        influxdb_publish('evt_strike', evt_strike)
+        influxdb_publish(topic, evt_strike)
 
     return data
 
@@ -203,14 +205,15 @@ def process_rapid_wind(data):
         print (" dir = " + str(rapid_wind['direction']), end='')
         print ('')
 
+    topic = MQTT_TOPLEVEL_TOPIC + "/rapid_wind"
+    if args.mqtt_multisensor:
+        topic = "sensors/" + serial_number + "/" + topic
+
     if args.mqtt:
-        topic = MQTT_TOPLEVEL_TOPIC + "/rapid_wind"
-        if args.mqtt_multisensor:
-            topic = "sensors/" + serial_number + "/" + topic
         mqtt_publish(MQTT_HOST,topic,rapid_wind)
 
     if args.influxdb:
-        influxdb_publish('rapid_wind', rapid_wind)
+        influxdb_publish(topic, rapid_wind)
 
     return data
 
@@ -244,14 +247,15 @@ def process_obs_air(data):
         print (" lightning_avg_km  = " + str(obs_air["lightning_strike_avg_distance"]), end='')
         print ('')
 
+    topic = MQTT_TOPLEVEL_TOPIC + "/obs_air"
+    if args.mqtt_multisensor:
+        topic = "sensors/" + serial_number + "/" + topic
+
     if args.mqtt:
-        topic = MQTT_TOPLEVEL_TOPIC + "/obs_air"
-        if args.mqtt_multisensor:
-            topic = "sensors/" + serial_number + "/" + topic
         mqtt_publish(MQTT_HOST,topic,obs_air)
 
     if args.influxdb:
-        influxdb_publish('obs_air', obs_air)
+        influxdb_publish(topic, obs_air)
 
     return data
 
@@ -292,14 +296,15 @@ def process_obs_sky(data):
         print (" wind_direction = "    + str(obs_sky["wind_direction"]) , end='')
         print ('')
 
+    topic = MQTT_TOPLEVEL_TOPIC + "/obs_sky"
+    if args.mqtt_multisensor:
+        topic = "sensors/" + serial_number + "/" + topic
+
     if args.mqtt:
-        topic = MQTT_TOPLEVEL_TOPIC + "/obs_sky"
-        if args.mqtt_multisensor:
-            topic = "sensors/" + serial_number + "/" + topic
         mqtt_publish(MQTT_HOST,topic,obs_sky)
 
     if args.influxdb:
-        influxdb_publish('obs_sky', obs_sky)
+        influxdb_publish(topic, obs_sky)
 
     return data
 
@@ -355,10 +360,13 @@ def process_device_status(data):
         print ('')
 
     # construct the status topic to publish to
+    # this one is unusual as two device_type(s) might be present
+
+    topic = MQTT_TOPLEVEL_TOPIC + "/status/" + device_type
+    if args.mqtt_multisensor:
+        topic = "sensors/" + serial_number + "/" + topic
+
     if args.mqtt:
-        topic = MQTT_TOPLEVEL_TOPIC + "/status/" + device_type
-        if args.mqtt_multisensor:
-            topic = "sensors/" + serial_number + "/" + topic
         mqtt_publish(MQTT_HOST,topic,device_status)
 
     if args.influxdb:
@@ -406,14 +414,15 @@ def process_hub_status(data):
         print (" rssi  = "              + str(hub_status["rssi"]), end='')
         print ('')
 
+    topic = MQTT_TOPLEVEL_TOPIC + "/status_hub"
+    if args.mqtt_multisensor:
+        topic = "sensors/" + serial_number + "/" + topic
+
     if args.mqtt:
-        topic = MQTT_TOPLEVEL_TOPIC + "/status/hub"
-        if args.mqtt_multisensor:
-            topic = "sensors/" + serial_number + "/" + topic
         mqtt_publish(MQTT_HOST,topic,hub_status)
 
     if args.influxdb:
-        influxdb_publish('hub_status', hub_status)     # careful here, might need to hub_status.pop("foo", None) for arrays
+        influxdb_publish(topic, hub_status)     # careful here, might need to hub_status.pop("foo", None) for arrays
 
     return data
 
@@ -434,7 +443,7 @@ def influxdb_publish(event, data):
         payload['fields'] = data
 
         if args.verbose:
-            print ("publishing to influxdb [%s:%s]: %s" % (args.influxdb_host, args.influxdb_port, payload))
+            print ("publishing %s to influxdb [%s:%s]: %s" % (event,args.influxdb_host, args.influxdb_port, payload))
 
         # write_points() allows us to pass in a precision with the timestamp
         client.write_points([payload], time_precision='s')
