@@ -390,12 +390,12 @@ def process_hub_status(data):
     hub_status["timestamp"]           = data["timestamp"]
     hub_status["reset_flags"]         = data["reset_flags"]
     hub_status["seq"]                 = data["seq"]
-    hub_status["fs"]                  = data["fs"]                 # internal use only
+    # skip - array    hub_status["fs"]                  = data["fs"]                 # internal use only
     hub_status["radio_stats_version"] = data["radio_stats"][0]
     hub_status["reboot_count"]        = data["radio_stats"][1]
     hub_status["i2c_bus_error_count"] = data["radio_stats"][2]
     hub_status["radio_status"]        = data["radio_stats"][3]     # 0=off, 1=on, 3=active
-    hub_status["mqtt_stats"]          = data["mqtt_stats"]         # internal use only
+    # skip - array hub_status["mqtt_stats"]          = data["mqtt_stats"]         # internal use only
 
     # reset flags are a comma-delimited string with values:
     #   BOR = brownout reset
