@@ -5,9 +5,13 @@ This is a quick listener for the WeatherFlow UDP broadcasts that can:
  * print the received UDP broadcasts to stdout
  * print the decoded broadcasts in a more human-friendly form
  * publish derived topics to MQTT
+ * publish derived topics to influxdb
 
 NOTE - This is tested using v114 of the WeatherFlow hub firmware.
 
+#### Version 4.x Important notes
+
+* Added ability to write directly to influxdb (thanks to user clouserw via PR)
 
 ##### Version 3.x Important notes
 
@@ -106,7 +110,7 @@ for --limit, possibilities are:
 * [Mosquitto MQTT Client Primer](#Mosquitto-MQTT-Client-Primer)
   * Subscribing to MQTT published topics
     * WeatherFlow MQTT topics
-
+* [Publishing to InfluxDB](#Publishing-to-influxdb)
 
 ---
 
@@ -296,5 +300,37 @@ pi@zero$ mosquitto_sub -t "wf/obs/#" -h mqtt
 {"firmware_revision": 20, "hub_sn": "HB-00010412", "obs": [[1535685379, 1006.8, 18.51, 76, 0, 0, 3.51, 1]], "serial_number": "AR-00013349", "type": "obs_air"}
 
 {"firmware_revision": 43, "hub_sn": "HB-00010412", "obs": [[1535685389, 18, 0.0, 0.0, 0.0, 1.08, 2.06, 258, 3.45, 1, 0, null, 0, 3]], "serial_number": "SK-00013695", "type": "obs_sky"}
+
+```
+---
+
+<a name="#Publishing-to-influxdb"></a>
+## Publishing to InfluxDB
+
+It is also possible to publish directly to a influxdb database
+
+
+### Example usage:
+
+This will print to a remote host 'influxdb' using a specified port and database, and also enable the multisensor syntax for more searchable generic topic names in the database.  This particular example requires no influxdb username/password, so those options have been omitted.
+
+
+```
+# this is typical usage for calling the program via /etc/rc.local or from a shell
+# - it backgrounds the command, and stay alive after the calling shell exits
+
+nohup python3 listen.py --influxdb --influxdb_host=influxdb --influxdb_port=8086  --influxdb_db=testdb -M &
+
+```
+
+Initially it might make sense to add the -n (no_pub) flag to see is being published, to aid in you writing queries or grafana dashboards versus your influxdb data.  Remember, however, that the -n flag writes to stdout, so you'd want to run the command in the foreground.
+
+```
+# see with it 'would' publish, but do not actually publish anything
+# (this will need two control-C to kill the process)
+
+# you might want to also add -v to see the reporter and listener threads
+
+python3 listen.py --influxdb --influxdb_host=influxdb --influxdb_port=8086  --influxdb_db=testdb -M -n
 
 ```

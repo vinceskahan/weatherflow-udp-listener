@@ -33,8 +33,8 @@ optional arguments:
                         exclude obs type(s) from being processed
   -i, --indent          indent raw data to stdout (requires -d)
   -m, --mqtt            publish to MQTT (one air/sky)
-  -M, --multi-mqtt      specify there are multiple air/sky present
-  -n, --no_pub          report but do not publish to MQTT
+  -M, --multi-sensor      specify there are multiple air/sky present
+  -n, --no_pub          report but do not publish to MQTT or InfluxDB
   -b MQTT_BROKER, --mqtt_broker MQTT_BROKER
                         MQTT broker hostname
   -t MQTT_TOPIC, --mqtt_topic MQTT_TOPIC
@@ -140,7 +140,7 @@ def process_evt_precip(data):
         print ('')
 
     topic = MQTT_TOPLEVEL_TOPIC + "/evt/precip"
-    if args.mqtt_multisensor:
+    if args.multisensor:
         topic = "sensors/" + serial_number + "/" + topic
 
     if args.mqtt:
@@ -173,7 +173,7 @@ def process_evt_strike(data):
         print ('')
 
     topic = MQTT_TOPLEVEL_TOPIC + "/evt/strike"
-    if args.mqtt_multisensor:
+    if args.multisensor:
         topic = "sensors/" + serial_number + "/" + topic
 
     if args.mqtt:
@@ -206,7 +206,7 @@ def process_rapid_wind(data):
         print ('')
 
     topic = MQTT_TOPLEVEL_TOPIC + "/rapid_wind"
-    if args.mqtt_multisensor:
+    if args.multisensor:
         topic = "sensors/" + serial_number + "/" + topic
 
     if args.mqtt:
@@ -248,7 +248,7 @@ def process_obs_air(data):
         print ('')
 
     topic = MQTT_TOPLEVEL_TOPIC + "/obs_air"
-    if args.mqtt_multisensor:
+    if args.multisensor:
         topic = "sensors/" + serial_number + "/" + topic
 
     if args.mqtt:
@@ -297,7 +297,7 @@ def process_obs_sky(data):
         print ('')
 
     topic = MQTT_TOPLEVEL_TOPIC + "/obs_sky"
-    if args.mqtt_multisensor:
+    if args.multisensor:
         topic = "sensors/" + serial_number + "/" + topic
 
     if args.mqtt:
@@ -363,7 +363,7 @@ def process_device_status(data):
     # this one is unusual as two device_type(s) might be present
 
     topic = MQTT_TOPLEVEL_TOPIC + "/status/" + device_type
-    if args.mqtt_multisensor:
+    if args.multisensor:
         topic = "sensors/" + serial_number + "/" + topic
 
     if args.mqtt:
@@ -390,7 +390,7 @@ def process_hub_status(data):
     hub_status["timestamp"]           = data["timestamp"]
     hub_status["reset_flags"]         = data["reset_flags"]
     hub_status["seq"]                 = data["seq"]
-    # skip - array    hub_status["fs"]                  = data["fs"]                 # internal use only
+    # skip - array hub_status["fs"]                  = data["fs"]                 # internal use only
     hub_status["radio_stats_version"] = data["radio_stats"][0]
     hub_status["reboot_count"]        = data["radio_stats"][1]
     hub_status["i2c_bus_error_count"] = data["radio_stats"][2]
@@ -415,7 +415,7 @@ def process_hub_status(data):
         print ('')
 
     topic = MQTT_TOPLEVEL_TOPIC + "/status_hub"
-    if args.mqtt_multisensor:
+    if args.multisensor:
         topic = "sensors/" + serial_number + "/" + topic
 
     if args.mqtt:
@@ -430,27 +430,33 @@ def process_hub_status(data):
 
 def influxdb_publish(event, data):
 
-    try:
-        client = InfluxDBClient(host=args.influxdb_host,
-                                port=args.influxdb_port,
-                                username=args.influxdb_user,
-                                password=args.influxdb_pass,
-                                database=args.influxdb_db)
-        payload = {}
-        payload['measurement'] = event
+    if args.no_pub:
+        print("influxdb_publish: ", event, data)
 
-        payload['time']   = data['timestamp']
-        payload['fields'] = data
+    if not args.no_pub:
+        try:
+            client = InfluxDBClient(host=args.influxdb_host,
+                                    port=args.influxdb_port,
+                                    username=args.influxdb_user,
+                                    password=args.influxdb_pass,
+                                    database=args.influxdb_db)
+            payload = {}
+            payload['measurement'] = event
 
-        if args.verbose:
-            print ("publishing %s to influxdb [%s:%s]: %s" % (event,args.influxdb_host, args.influxdb_port, payload))
+            payload['time']   = data['timestamp']
+            payload['fields'] = data
 
-        # write_points() allows us to pass in a precision with the timestamp
-        client.write_points([payload], time_precision='s')
+            if args.verbose:
+                print ("publishing %s to influxdb [%s:%s]: %s" % (event,args.influxdb_host, args.influxdb_port, payload))
 
-    except Exception as e:
-        print("Failed to connect to InfluxDB: %s" % e)
-        print("  Payload was: %s" % payload)
+            # write_points() allows us to pass in a precision with the timestamp
+            client.write_points([payload], time_precision='s')
+
+        except Exception as e:
+            message = "Failed to connect to InfluxDB: %s" + e
+            logerr(message);
+            message = "  Payload was: %s" + payload
+            logerr(message);
 
 #----------------
 
@@ -586,7 +592,7 @@ for --limit, possibilities are:
     parser.add_argument("-i", "--indent",  dest="indent",  action="store_true", help="indent raw data to stdout (requires -d)")
 
     parser.add_argument("-m", "--mqtt",       dest="mqtt",             action="store_true", help="publish to MQTT")
-    parser.add_argument("-M", "--multi-mqtt", dest="mqtt_multisensor", action="store_true", help="specify there are multiple air/sky present")
+    parser.add_argument("-M", "--multi-sensor", dest="multisensor", action="store_true", help="specify there are multiple air/sky present")
 
     parser.add_argument("-n", "--no_pub",  dest="no_pub",  action="store_true", help="report but do not publish to MQTT")
 
