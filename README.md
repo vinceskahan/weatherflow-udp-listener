@@ -43,7 +43,7 @@ Raspbian versions based on Debian 10 have a recent enough python3 by default.  Y
 ---
 ## Installation
 
-This requires installing the paho mqtt and influxsb python libraries.  
+This requires installing the paho mqtt and influxdb python libraries.  
 On a debian(ish) system that can be done by:
 ```
 # for python3
