@@ -33,8 +33,8 @@ optional arguments:
                         exclude obs type(s) from being processed
   -i, --indent          indent raw data to stdout (requires -d)
   -m, --mqtt            publish to MQTT (one air/sky)
-  -M, --multi-sensor      specify there are multiple air/sky present
-  -n, --no_pub          report but do not publish to MQTT or InfluxDB
+  -M, --multi-mqtt      specify there are multiple air/sky present
+  -n, --no_pub          report but do not publish to MQTT
   -b MQTT_BROKER, --mqtt_broker MQTT_BROKER
                         MQTT broker hostname
   -t MQTT_TOPIC, --mqtt_topic MQTT_TOPIC
@@ -55,7 +55,7 @@ optional arguments:
   -v, --verbose         verbose output to watch the threads
 
 for --limit, possibilities are:
-   rapid_wind, obs_sky, obs_air,
+   rapid_wind, obs_sky, obs_air, obs_st
    hub_status, device_status, evt_precip, evt_strike
 """
 
@@ -140,7 +140,7 @@ def process_evt_precip(data):
         print ('')
 
     topic = MQTT_TOPLEVEL_TOPIC + "/evt/precip"
-    if args.multisensor:
+    if args.mqtt_multisensor:
         topic = "sensors/" + serial_number + "/" + topic
 
     if args.mqtt:
@@ -173,7 +173,7 @@ def process_evt_strike(data):
         print ('')
 
     topic = MQTT_TOPLEVEL_TOPIC + "/evt/strike"
-    if args.multisensor:
+    if args.mqtt_multisensor:
         topic = "sensors/" + serial_number + "/" + topic
 
     if args.mqtt:
@@ -206,7 +206,7 @@ def process_rapid_wind(data):
         print ('')
 
     topic = MQTT_TOPLEVEL_TOPIC + "/rapid_wind"
-    if args.multisensor:
+    if args.mqtt_multisensor:
         topic = "sensors/" + serial_number + "/" + topic
 
     if args.mqtt:
@@ -248,7 +248,7 @@ def process_obs_air(data):
         print ('')
 
     topic = MQTT_TOPLEVEL_TOPIC + "/obs_air"
-    if args.multisensor:
+    if args.mqtt_multisensor:
         topic = "sensors/" + serial_number + "/" + topic
 
     if args.mqtt:
@@ -256,6 +256,71 @@ def process_obs_air(data):
 
     if args.influxdb:
         influxdb_publish(topic, obs_air)
+
+    return data
+
+#----------------
+
+def process_obs_st(data):
+    if args.exclude and ("obs_st" in args.exclude): return
+    if args.limit and ("obs_st" not in args.limit): return
+    if args.raw: print_raw(data)
+
+    obs_st = {}
+    serial_number = data["serial_number"]
+                                                                         # skip hub_sn
+    obs_st["timestamp"]                     = data["obs"][0][0]
+    obs_st["wind_lull"]                     = data["obs"][0][1]          # meters/second min 3 sec sample
+    obs_st["wind_avg"]                      = data["obs"][0][2]          # meters/second avg over report interval
+    obs_st["wind_gust"]                     = data["obs"][0][3]          # meters_second max 3 sec sample
+    obs_st["wind_direction"]                = data["obs"][0][4]          # degrees
+    obs_st["wind_sample_interval"]          = data["obs"][0][5]          # seconds
+    obs_st["station_pressure"]              = data["obs"][0][6]          # MB
+    obs_st["temperature"]                   = data["obs"][0][7]          # deg-C
+    obs_st["relative_humidity"]             = data["obs"][0][8]          # %
+    obs_st["illuminance"]                   = data["obs"][0][9]          # lux
+    obs_st["uv"]                            = data["obs"][0][10]         # index
+    obs_st["solar_radiation"]               = data["obs"][0][11]         # W/m^2
+    obs_st["rain_accumulated"]              = data["obs"][0][12]         # mm (in this reporting interval)
+    obs_st["precipitation_type"]            = data["obs"][0][13]         # 0=none, 1=rain, 2=hail
+    obs_st["lightning_strike_avg_distance"] = data["obs"][0][14]         # km
+    obs_st["lightning_strike_count"]        = data["obs"][0][15]
+    obs_st["battery"]                       = data["obs"][0][16]         # volts
+    obs_st["report_interval"]               = data["obs"][0][17]         # minutes
+    obs_st["firmware_revision"]             = data["firmware_revision"]
+
+    if args.decoded:
+        print ("obs_st        => ", end='')
+        print (" timestamp  = "                     + str(obs_st["timestamp"]) ,  end='')
+        print (" wind_lull  = "                     + str(obs_st["wind_lull"]) ,  end='')
+        print (" wind_avg  = "                      + str(obs_st["wind_avg"]) ,  end='')
+        print (" wind_gust  = "                     + str(obs_st["wind_gust"]) ,  end='')
+        print (" wind_direction  = "                + str(obs_st["wind_direction"]) ,  end='')
+        print (" wind_sample_interval  = "          + str(obs_st["wind_sample_interval"]) ,  end='')
+        print (" station_pressure  = "              + str(obs_st["station_pressure"]) , end='')
+        print (" temperature  = "                   + str(obs_st["temperature"]) , end='')
+        print (" relative_humidity  = "             + str(obs_st["relative_humidity"]) , end='')
+        print (" illuminance  = "                   + str(obs_st["illuminance"]) , end='')
+        print (" uv  = "                            + str(obs_st["uv"]) , end='')
+        print (" solar_radiation  = "               + str(obs_st["solar_radiation"]) , end='')
+        print (" rain_accumulated  = "              + str(obs_st["rain_accumulated"]) , end='')
+        print (" precipitation_type  = "            + str(obs_st["precipitation_type"]) , end='')
+        print (" lightning_strike_avg_distance  = " + str(obs_st["lightning_strike_avg_distance"]) , end='')
+        print (" lightning_strike_count  = "        + str(obs_st["lightning_strike_count"]) , end='')
+        print (" battery = "                        + str(obs_st["battery"]) , end='')
+        print (" report_interval = "                + str(obs_st["report_interval"]) , end='')
+        print (" firmware_revision = "              + str(obs_st["firmware_revision"]) , end='')
+        print ('')
+
+    topic = MQTT_TOPLEVEL_TOPIC + "/obs_st"
+    if args.mqtt_multisensor:
+        topic = "sensors/" + serial_number + "/" + topic
+
+    if args.mqtt:
+        mqtt_publish(MQTT_HOST,topic,obs_st)
+
+    if args.influxdb:
+        influxdb_publish(topic, obs_st)
 
     return data
 
@@ -297,7 +362,7 @@ def process_obs_sky(data):
         print ('')
 
     topic = MQTT_TOPLEVEL_TOPIC + "/obs_sky"
-    if args.multisensor:
+    if args.mqtt_multisensor:
         topic = "sensors/" + serial_number + "/" + topic
 
     if args.mqtt:
@@ -320,6 +385,8 @@ def process_device_status(data):
             device_type = "air"
     elif "SK-" in data["serial_number"]:
             device_type = "sky"
+    elif "ST-" in data["serial_number"]:
+            device_type = "tempest"
     else:
             device_type = "unknown_type"
 
@@ -363,7 +430,7 @@ def process_device_status(data):
     # this one is unusual as two device_type(s) might be present
 
     topic = MQTT_TOPLEVEL_TOPIC + "/status/" + device_type
-    if args.multisensor:
+    if args.mqtt_multisensor:
         topic = "sensors/" + serial_number + "/" + topic
 
     if args.mqtt:
@@ -390,7 +457,7 @@ def process_hub_status(data):
     hub_status["timestamp"]           = data["timestamp"]
     hub_status["reset_flags"]         = data["reset_flags"]
     hub_status["seq"]                 = data["seq"]
-    # skip - array hub_status["fs"]                  = data["fs"]                 # internal use only
+    # skip - array    hub_status["fs"]                  = data["fs"]                 # internal use only
     hub_status["radio_stats_version"] = data["radio_stats"][0]
     hub_status["reboot_count"]        = data["radio_stats"][1]
     hub_status["i2c_bus_error_count"] = data["radio_stats"][2]
@@ -415,7 +482,7 @@ def process_hub_status(data):
         print ('')
 
     topic = MQTT_TOPLEVEL_TOPIC + "/status_hub"
-    if args.multisensor:
+    if args.mqtt_multisensor:
         topic = "sensors/" + serial_number + "/" + topic
 
     if args.mqtt:
@@ -430,33 +497,27 @@ def process_hub_status(data):
 
 def influxdb_publish(event, data):
 
-    if args.no_pub:
-        print("influxdb_publish: ", event, data)
+    try:
+        client = InfluxDBClient(host=args.influxdb_host,
+                                port=args.influxdb_port,
+                                username=args.influxdb_user,
+                                password=args.influxdb_pass,
+                                database=args.influxdb_db)
+        payload = {}
+        payload['measurement'] = event
 
-    if not args.no_pub:
-        try:
-            client = InfluxDBClient(host=args.influxdb_host,
-                                    port=args.influxdb_port,
-                                    username=args.influxdb_user,
-                                    password=args.influxdb_pass,
-                                    database=args.influxdb_db)
-            payload = {}
-            payload['measurement'] = event
+        payload['time']   = data['timestamp']
+        payload['fields'] = data
 
-            payload['time']   = data['timestamp']
-            payload['fields'] = data
+        if args.verbose:
+            print ("publishing %s to influxdb [%s:%s]: %s" % (event,args.influxdb_host, args.influxdb_port, payload))
 
-            if args.verbose:
-                print ("publishing %s to influxdb [%s:%s]: %s" % (event,args.influxdb_host, args.influxdb_port, payload))
+        # write_points() allows us to pass in a precision with the timestamp
+        client.write_points([payload], time_precision='s')
 
-            # write_points() allows us to pass in a precision with the timestamp
-            client.write_points([payload], time_precision='s')
-
-        except Exception as e:
-            message = "Failed to connect to InfluxDB: %s" + e
-            logerr(message);
-            message = "  Payload was: %s" + payload
-            logerr(message);
+    except Exception as e:
+        print("Failed to connect to InfluxDB: %s" % e)
+        print("  Payload was: %s" % payload)
 
 #----------------
 
@@ -554,6 +615,7 @@ def report_it(data):
     elif data["type"] == "rapid_wind":    process_rapid_wind(data)
     elif data["type"] == "obs_air":       process_obs_air(data)
     elif data["type"] == "obs_sky":       process_obs_sky(data)
+    elif data["type"] == "obs_st":   process_obs_st(data)
     elif data["type"] == "device_status": process_device_status(data)
     elif data["type"] == "hub_status":    process_hub_status(data)
 
@@ -578,7 +640,7 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 for --limit, possibilities are:
-   rapid_wind, obs_sky, obs_air,
+   rapid_wind, obs_sky, obs_air, obs_st
    hub_status, device_status, evt_precip, evt_strike
        """,
     )
@@ -592,7 +654,7 @@ for --limit, possibilities are:
     parser.add_argument("-i", "--indent",  dest="indent",  action="store_true", help="indent raw data to stdout (requires -d)")
 
     parser.add_argument("-m", "--mqtt",       dest="mqtt",             action="store_true", help="publish to MQTT")
-    parser.add_argument("-M", "--multi-sensor", dest="multisensor", action="store_true", help="specify there are multiple air/sky present")
+    parser.add_argument("-M", "--multi-mqtt", dest="mqtt_multisensor", action="store_true", help="specify there are multiple air/sky present")
 
     parser.add_argument("-n", "--no_pub",  dest="no_pub",  action="store_true", help="report but do not publish to MQTT")
 
@@ -606,7 +668,6 @@ for --limit, possibilities are:
     parser.add_argument("--influxdb_user", dest="influxdb_user", action="store",                                      help="InfluxDB username")
     parser.add_argument("--influxdb_pass", dest="influxdb_pass", action="store",                                      help="InfluxDB password")
     parser.add_argument("--influxdb_db",   dest="influxdb_db",   action="store",      default="smartweather",         help="InfluxDB database name")
-
  
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="verbose mode - show threads")
 
