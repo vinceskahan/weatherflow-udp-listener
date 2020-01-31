@@ -33,7 +33,7 @@ optional arguments:
                         exclude obs type(s) from being processed
   -i, --indent          indent raw data to stdout (requires -d)
   -m, --mqtt            publish to MQTT (one air/sky)
-  -M, --multi-mqtt      specify there are multiple air/sky present
+  -M, --multisensor     specify there are multiple air/sky/tempest present
   -n, --no_pub          report but do not publish to MQTT
   -b MQTT_BROKER, --mqtt_broker MQTT_BROKER
                         MQTT broker hostname
@@ -654,7 +654,7 @@ for --limit, possibilities are:
     parser.add_argument("-i", "--indent",  dest="indent",  action="store_true", help="indent raw data to stdout (requires -d)")
 
     parser.add_argument("-m", "--mqtt",       dest="mqtt",             action="store_true", help="publish to MQTT")
-    parser.add_argument("-M", "--multi-mqtt", dest="mqtt_multisensor", action="store_true", help="specify there are multiple air/sky present")
+    parser.add_argument("-M", "--multisensor", dest="mqtt_multisensor", action="store_true", help="specify there are multiple air/sky present")
 
     parser.add_argument("-n", "--no_pub",  dest="no_pub",  action="store_true", help="report but do not publish to MQTT")
 
