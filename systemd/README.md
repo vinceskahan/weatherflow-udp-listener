@@ -5,7 +5,7 @@ The UDP listener is a python3 script that typically is run interactively from a 
 
 ### INSTALLATION 
 
-Before starting the service, edit `/etc/default/weatherflow-udp-listener` to set your desired commandline options.
+IMPORTANT: before starting the service, edit `/etc/default/weatherflow-udp-listener` to set your desired commandline options.
 
 As distributed, the service will run as the non-privileged user=pi group=pi.  Edit the .service file if you want to use a different user/group.
 
@@ -13,8 +13,8 @@ The commands below should be run as root (or via sudo).
 
 * Install the files into the usual places
 ```
-cp systemd/weatherflow-udp-listener /etc/default/weatherflow-udp-listener
-cp systemd/weatherflow-udp-listener.service /lib/systemd/service
+cp etc/default/weatherflow-udp-listener /etc/default/weatherflow-udp-listener
+cp lib/systemd/system/weatherflow-udp-listener.service /lib/systemd/service/weatherflow-udp-listener.service
 cp listen.py /usr/local/bin/listen.py
 chmod 755 /usr/local/bin/listen.py
 ```
