@@ -57,6 +57,8 @@ optional arguments:
 for --limit, possibilities are:
    rapid_wind, obs_sky, obs_air, obs_st
    hub_status, device_status, evt_precip, evt_strike
+   wind_debug, light_debug, rain_rebug
+
 """
 
 #----------------
@@ -375,6 +377,23 @@ def process_obs_sky(data):
 
 #----------------
 
+def process_light_debug(data):
+    if args.exclude and ("light_debug" in args.exclude): return
+    if args.limit and ("light_debug" not in args.limit): return
+    if args.raw: print_raw(data)
+
+def process_wind_debug(data):
+    if args.exclude and ("wind_debug" in args.exclude): return
+    if args.limit and ("wind_debug" not in args.limit): return
+    if args.raw: print_raw(data)
+
+def process_rain_debug(data):
+    if args.exclude and ("rain_debug" in args.exclude): return
+    if args.limit and ("rain_debug" not in args.limit): return
+    if args.raw: print_raw(data)
+
+#----------------
+
 def process_device_status(data):
     if args.exclude and ("device_status" in args.exclude): return
     if args.limit and ("device_status" not in args.limit): return
@@ -424,6 +443,8 @@ def process_device_status(data):
         print (" firmware_revision  = " + str(device_status["firmware_revision"]), end='')
         print (" rssi  = "              + str(device_status["rssi"]), end='')
         print (" hub_rssi  = "          + str(device_status["hub_rssi"]), end='')
+        print (" sensor_status  = "     + str(device_status["sensor_status"]), end='')
+        print (" debug  = "             + str(device_status["debug"]), end='')
         print ('')
 
     # construct the status topic to publish to
@@ -615,14 +636,14 @@ def report_it(data):
     elif data["type"] == "rapid_wind":    process_rapid_wind(data)
     elif data["type"] == "obs_air":       process_obs_air(data)
     elif data["type"] == "obs_sky":       process_obs_sky(data)
-    elif data["type"] == "obs_st":   process_obs_st(data)
+    elif data["type"] == "obs_st":        process_obs_st(data)
     elif data["type"] == "device_status": process_device_status(data)
     elif data["type"] == "hub_status":    process_hub_status(data)
 
     # --- uncomment to skip undocumented debug types ---
-    # elif data["type"] == "wind_debug":    pass
-    # elif data["type"] == "light_debug":   pass
-    # elif data["type"] == "rain_debug":    pass
+    elif data["type"] == "wind_debug":    process_wind_debug(data)
+    elif data["type"] == "light_debug":   process_light_debug(data)
+    elif data["type"] == "rain_debug":    process_rain_debug(data)
 
     else:
        # this catches 'lack of' a data["type"] in the data as well

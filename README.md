@@ -94,6 +94,7 @@ optional arguments:
 for --limit, possibilities are:
    rapid_wind, obs_sky, obs_air,
    hub_status, device_status, evt_precip, evt_strike
+   wind_debug, light_debug, rain_rebug
 
 ```
 ---
