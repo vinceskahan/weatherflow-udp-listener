@@ -1,0 +1,17 @@
+[Unit]
+Description=WeatherFlow UDP Listener
+
+[Service]
+Type=simple
+WorkingDirectory=/usr/local/bin
+EnvironmentFile=/etc/default/weatherflow-udp-listener
+ExecStart=python3 /usr/local/bin/listen.py $CMDARGS
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+User=pi
+Group=pi
+
+[Install]
+WantedBy=multi-user.target
+

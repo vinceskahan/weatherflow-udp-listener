@@ -1,0 +1,10 @@
+
+#-----------------------------------------------------------------------------
+# /etc/default/weatherflow-udp-listener - config options for the udp listener
+#-----------------------------------------------------------------------------
+
+# this example publishes to influxdb on localhost:8086 to a db named 'testdb'
+# with the multisensor option enabled to get the desired element name in the db
+
+CMDARGS="--influxdb --influxdb_host=localhost --influxdb_port=8086 --influxdb_db=testdb -M"
+
