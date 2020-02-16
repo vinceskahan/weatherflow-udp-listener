@@ -354,6 +354,7 @@ def process_obs_sky(data):
 
     if args.decoded:
         print ("obs_sky        => ", end='')
+        print (" serial_number  = "    + str(serial_number) ,  end='')
         print (" timestamp  = "        + str(obs_sky["timestamp"]) ,  end='')
         print (" uv  = "               + str(obs_sky["uv"]) , end='')
         print (" rain_accumulated  = " + str(obs_sky["rain_accumulated"]) , end='')
@@ -361,6 +362,9 @@ def process_obs_sky(data):
         print (" wind_avg = "          + str(obs_sky["wind_avg"]) , end='')
         print (" wind_gust = "         + str(obs_sky["wind_gust"]) , end='')
         print (" wind_direction = "    + str(obs_sky["wind_direction"]) , end='')
+        print (" battery = "           + str(obs_sky["battery"]) , end='')
+        print (" report_interval = "   + str(obs_sky["report_interval"]) , end='')
+        print (" solar_radiation = "   + str(obs_sky["solar_radiation"]) , end='')
         print ('')
 
     topic = MQTT_TOPLEVEL_TOPIC + "/obs_sky"
@@ -436,6 +440,7 @@ def process_device_status(data):
 
     if args.decoded:
         print ("device_status  => ", end='')
+        print (" serial_number  = "    + str(serial_number) ,  end='')
         print (" device_type = "        + str(device_type), end='')
         print (" ts  = "                + str(device_status["timestamp"]), end='')
         print (" uptime  = "            + str(device_status["uptime"]), end='')
