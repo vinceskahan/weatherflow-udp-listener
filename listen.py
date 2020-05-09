@@ -560,9 +560,9 @@ def mqtt_publish(mqtt_host,mqtt_topic,data):
 
         if args.mqtt_user:
             if args.mqtt_pass:
-                AUTH = "{'username':\"args_username\", 'password':\"args_mqtt_password\"}"
+                AUTH = dict(username = args.mqtt_user, password = args.mqtt_pass)
             else:
-                AUTH = "{'username':\"args_username\"}"
+                AUTH = dict(username = args.mqtt_user)
         else:
             AUTH = None
 
