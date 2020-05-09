@@ -52,6 +52,10 @@ optional arguments:
                         InfluxDb password
   --influxdb_db INFLUXDB_DB
                         InfluxDb database name
+  --mqtt_user MQTT_USER
+                        MQTT username (if needed)
+  --mqtt_pass MQTT_PASS
+                        MQTT password (if MQTT_USER has a password)
   -v, --verbose         verbose output to watch the threads
 
 for --limit, possibilities are:
@@ -553,6 +557,15 @@ def mqtt_publish(mqtt_host,mqtt_topic,data):
         print ("    ", json.dumps(data,sort_keys=True));
 
     if not args.no_pub:
+
+        if args.mqtt_user:
+            if args.mqtt_pass:
+                AUTH = "{'username':\"args_username\", 'password':\"args_mqtt_password\"}"
+            else:
+                AUTH = "{'username':\"args_username\"}"
+        else:
+            AUTH = None
+
         broker_address=mqtt_host
         client_id=MQTT_CLIENT_ID
         topic=mqtt_topic
@@ -566,6 +579,7 @@ def mqtt_publish(mqtt_host,mqtt_topic,data):
             hostname=broker_address,
             client_id=client_id,
             port=port,
+            auth=AUTH,
             protocol=mqtt.MQTTv311)
 
     return
@@ -694,6 +708,9 @@ for --limit, possibilities are:
     parser.add_argument("--influxdb_user", dest="influxdb_user", action="store",                                      help="InfluxDB username")
     parser.add_argument("--influxdb_pass", dest="influxdb_pass", action="store",                                      help="InfluxDB password")
     parser.add_argument("--influxdb_db",   dest="influxdb_db",   action="store",      default="smartweather",         help="InfluxDB database name")
+
+    parser.add_argument("--mqtt_user", dest="mqtt_user", action="store", help="MQTT username (if needed)")
+    parser.add_argument("--mqtt_pass", dest="mqtt_pass", action="store", help="MQTT password (if MQTT_USER has a password)")
  
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", help="verbose mode - show threads")
 
