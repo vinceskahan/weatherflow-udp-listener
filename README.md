@@ -6,8 +6,10 @@ This is a quick listener for the WeatherFlow UDP broadcasts that can:
  * print the decoded broadcasts in a more human-friendly form
  * publish derived topics to MQTT
  * publish derived topics to influxdb
+ * support any combination of Air/Sky/Tempest
+ * support multiple instances of Air/Sky/Tempest at your site
 
-NOTE - This is tested using v114 of the WeatherFlow hub firmware.
+NOTE - This is tested using v119 of the WeatherFlow hub firmware.
 
 #### Version 4.x Important notes
 
@@ -70,7 +72,7 @@ optional arguments:
                         exclude obs type(s) from being processed
   -i, --indent          indent raw data to stdout (requires -d)
   -m, --mqtt            publish to MQTT
-  -M, --multi-mqtt      specify there are multiple air/sky present
+  -M, --multi-mqtt      specify there are multiple air/sky/tempest present
   -n, --no_pub          report but do not publish to MQTT
   -b MQTT_BROKER, --mqtt_broker MQTT_BROKER
                         MQTT broker hostname
