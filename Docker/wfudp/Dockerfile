@@ -2,47 +2,40 @@
 # This is a quick Dockerfile to build and run the
 # WeatherFlow UDP listener via a Docker container.
 #
-# tested on a MacbookAir running macOS Mojave 10.14.1
+
+FROM python:3.8-alpine
+LABEL maintainer="Vince Skahan vinceskahan@gmail.com"
+
+ADD https://raw.githubusercontent.com/vinceskahan/weatherflow-udp-listener/master/listen.py /
+# Conversely, you can add a modified copy from this directory:
+# ADD listen.py /
+
+# Install the required Python packages for InfluxDB and MQTT support
+RUN pip3 install influxdb paho-mqtt
+
+# Uncomment an ENTRYPOINT below, or modify to suit your needs:
+
+# Show the help screen and exit
+# ENTRYPOINT ["python", "/listen.py", "--help"]
+
+# Publish to InfluxDB (Edit the INFLUX_ placeholders as needed to match your environment)
+# ENTRYPOINT ["python", "/listen.py", "--influxdb", "--influxdb_host=INFLUX_HOST", "--influxdb_db=INFLUX_DB", "--influxdb_pass=INFLUX_PASS", "--influxdb_port=8086", "--influxdb_user=INFLUX_USER"]
+
+# Publish but exclude rapid_wind observations
+# ENTRYPOINT ["python", "/listen.py", "--mqtt", "--exclude", "rapid_wind"]
+
+# Publish known observations only
+ENTRYPOINT ["python", "/listen.py", "--mqtt", "--syslog"]
+
 #
-# cleanup of apt remnants courtesy of:
-#  https://gist.github.com/marvell/7c812736565928e602c4
-
-#-------
-# use python slim to stay lean and mean
-# this is 175MB or so in size
-
-FROM python:2.7.15-slim
-MAINTAINER Vince Skahan "vinceskahan@gmail.com"
-RUN apt-get update \
-    && apt-get install -y wget \
-    && pip install paho-mqtt \
-    && apt-get clean autoclean \
-    && apt-get autoremove --yes \
-    && rm -rf /var/lib/{apt,dpkg,cache,log}/
-
-#--- to download a verbatim copy of the latest on github
-RUN cd /root && wget https://raw.githubusercontent.com/vinceskahan/weatherflow-udp-listener/master/listen.py
-
-#--- or to copy in an edited one from this directory
-# ADD listen.py /root/listen.py
-
-# uncertain if this is needed
-EXPOSE 50222/udp
-
-# ENTRYPOINT ["python", "/root/listen.py", "--help"]
-
-# run it for real, publishing known observations only
-ENTRYPOINT ["python", "/root/listen.py", "--mqtt", "--syslog"]
-
-# to run bash interactively comment out the ENTRYPOINT above
-# and rebuild the image using 'debian' as your base box,
-# being sure to add the apt-get line for python-pip too,
-# then run the container ala:
-#    docker run -p 50222:50222/udp --add-host mqtt:192.168.1.169  -it docker_wfudp sh
-# which will start a shell in the container.  Then run the listener interactively ala:
-#    python /root/listen.py --raw
-# and verify that you see it listening and writing the JSON it heard to the console
+# To run bash interactively in the container for troubleshooting purposes,
+# you can run this container and override the ENTRYPOINT to instead execute
+# a shell via:
 #
-
-# another example of how to run it, excluding rapid_wind observations
-# ENTRYPOINT ["python", "/root/listen.py", "--mqtt", "--exclude", "rapid_wind"]
+#  docker run -it --entrypoint sh --rm docker_wfudp
+#
+# Once in the container, you can run the listenener interactively to ensure you
+# can see it listening and writing JSON to the console via:
+#
+#  python /listen.py --raw
+#
