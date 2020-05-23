@@ -32,10 +32,13 @@ ENTRYPOINT ["python", "/listen.py", "--mqtt", "--syslog"]
 # you can run this container and override the ENTRYPOINT to instead execute
 # a shell via:
 #
-#  docker run -it --entrypoint sh --rm docker_wfudp
+#  docker run -it -p 50222:50222/udp --entrypoint sh --rm -pdocker_wfudp
 #
 # Once in the container, you can run the listenener interactively to ensure you
 # can see it listening and writing JSON to the console via:
 #
 #  python /listen.py --raw
 #
+
+# Expose 50222/udp for inbound UDP multicast from WeatherFlow hub
+EXPOSE 50222/udp
