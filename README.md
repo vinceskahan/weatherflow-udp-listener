@@ -17,10 +17,11 @@ It is important to understand your reasonable expectations regarding this softwa
 
 * you can not expect 'rain' readings to be accurate.  WeatherFlow adjusts the accumulated rain for a calendar day via their proprietary RainCheck algorithms, which run in a batch job on the morning of the 'next' calendar day based on midnight at your location.    While you can trust that the rain start 'event' you see is truth as your station's sensors saw when rain started, you can 'not' reasonably trust rain accumulation or rain rate based on the UDP broadcasts by your Hub.
 
-* you can not expect 'lightning' to be accurate.  WeatherFlow essentially crowd-sources and calculates an aggregated lightning reading for your station as you would see it their web page or mobile app.  While the UDP lightning data from your station 'is' used by the WeatherFlow servers as part of this aggregation on their end, you are not the 'sole' source of lightning data reported for your station (as viewed on their web or mobile app).  Acc
+* you can not expect 'lightning' to be accurate.  WeatherFlow essentially crowd-sources and calculates an aggregated lightning reading for your station as you would see it their web page or mobile app.  While the UDP lightning data from your station 'is' used by the WeatherFlow servers as part of this aggregation on their end, you are not the 'sole' source of lightning data reported for your station (as viewed on their web or mobile app).
 
 * all other data reported from the UDP broadcasts on your LAN 'can' be assumed to match up with what you would see if you used the WeatherFlow web page, mobile app, REST, or Websockets APIs which all connect to WeatherFlow servers on Internet.
 
+----
 
 #### Version 4.x Important notes
 
@@ -37,6 +38,7 @@ It is important to understand your reasonable expectations regarding this softwa
 * The listener now supports python3. All examples below have been updated accordingly.
 * Typical output has been significantly quieted down, with debugging output suppressed unless you use the --verbose flag
 
+----
 
 ##### Python version requirements
 
