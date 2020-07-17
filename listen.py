@@ -77,21 +77,20 @@ from __future__ import print_function
 import argparse
 import datetime
 import json
-import paho.mqtt.client  as mqtt
-import paho.mqtt.publish as publish
 import sys
 import syslog
 import time
 import threading
 import os
 from socket import *
-from influxdb import InfluxDBClient
 
 # python3 renamed it to 'queue'
 try:
   from queue import Queue
 except:
   from Queue import Queue
+
+PY3 = sys.version_info[0] == 3
 
 # weatherflow broadcasts on this port
 MYPORT = 50222
@@ -526,6 +525,7 @@ def process_hub_status(data):
 #----------------
 
 def influxdb_publish(event, data):
+    from influxdb import InfluxDBClient
 
     try:
         client = InfluxDBClient(host=args.influxdb_host,
@@ -552,6 +552,8 @@ def influxdb_publish(event, data):
 #----------------
 
 def mqtt_publish(mqtt_host,mqtt_topic,data):
+    import paho.mqtt.client  as mqtt
+    import paho.mqtt.publish as publish
     print ("publishing to mqtt://%s/%s" % (mqtt_host, mqtt_topic))
     if args.no_pub:
         print ("    ", json.dumps(data,sort_keys=True));
@@ -607,8 +609,11 @@ def listener_task(q):
     # this is lame, but it's the listener
     while 1:
       try:
-        msg=s.recvfrom(1024)
-        data=json.loads(msg[0])      # this is the JSON payload
+        msg, host_info=s.recvfrom(1024)
+        if PY3:
+            # Under Python 3, the message will be type bytes. Convert to string.
+            msg = msg.decode()
+        data=json.loads(msg)      # this is the JSON payload
         q.put(data)                  # save in the queue  (do this 5 times to prove the queue queues)
         if args.verbose:
             print("-------------")
@@ -743,7 +748,7 @@ for --limit, possibilities are:
     # the socket
     if args.verbose:
       print("setting up socket - ", end='')
-    s = socket(AF_INET, SOCK_DGRAM)
+    s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
     s.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
     s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
     s.setblocking(False)
@@ -752,7 +757,7 @@ for --limit, possibilities are:
       print("socket set up")
 
     # the main thread
-    if (sys.version_info > (3,0)):
+    if PY3:
       thread_name = threading.main_thread().name
     else:
       thread_name = threading.current_thread().name
@@ -772,6 +777,7 @@ for --limit, possibilities are:
 
     # start them up
     for t in threads:
+        t.setDaemon(True)
         t.start()
 
     # wait for them to finish
