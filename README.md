@@ -6,6 +6,7 @@ This is a quick listener for the WeatherFlow UDP broadcasts that can:
  * print the decoded broadcasts in a more human-friendly form
  * publish derived topics to MQTT
  * publish derived topics to influxdb
+ * publish derived topics to influxdb v2
  * support any combination of Air/Sky/Tempest
  * support multiple instances of Air/Sky/Tempest at your site
 
@@ -74,6 +75,7 @@ sudo apt-get install -y python-pip  && sudo pip  install paho-mqtt influxdb
 
 usage: listen.py [-h] [-r] [-d] [-s] [-l LIMIT] [-x EXCLUDE] [-i] [-m] [-n]
                  [-w] [-b MQTT_BROKER] [-t MQTT_TOPIC]
+
 optional arguments:
   -h, --help            show this help message and exit
   -r, --raw             print raw data to stddout
@@ -84,8 +86,8 @@ optional arguments:
   -x EXCLUDE, --exclude EXCLUDE
                         exclude obs type(s) from being processed
   -i, --indent          indent raw data to stdout (requires -d)
-  -m, --mqtt            publish to MQTT
-  -M, --multi-mqtt      specify there are multiple air/sky/tempest present
+  -m, --mqtt            publish to MQTT (one air/sky)
+  -M, --multisensor     specify there are multiple air/sky/tempest present
   -n, --no_pub          report but do not publish to MQTT
   -b MQTT_BROKER, --mqtt_broker MQTT_BROKER
                         MQTT broker hostname
@@ -104,10 +106,24 @@ optional arguments:
                         InfluxDb password
   --influxdb_db INFLUXDB_DB
                         InfluxDb database name
+  --influxdb2           publish InfluxDB v2
+  --influxdb2_url INFLUXDB2_URL
+                        InfluxDB v2 HTTP API root URL
+  --influxdb2_org INFLUXDB2_ORG
+                        InfluxDB v2 Organization
+  --influxdb2_bucket INFLUXDB2_BUCKET
+                        InfluxDB v2 Bucket
+  --influxdb2_token INFLUXDB2_TOKEN
+                        InfluxDB v2 Token
+  --influxdb2_debug     Debug InfluxDB v2 publisher
+  --mqtt_user MQTT_USER
+                        MQTT username (if needed)
+  --mqtt_pass MQTT_PASS
+                        MQTT password (if MQTT_USER has a password)
   -v, --verbose         verbose output to watch the threads
 
 for --limit, possibilities are:
-   rapid_wind, obs_sky, obs_air,
+   rapid_wind, obs_sky, obs_air, obs_st
    hub_status, device_status, evt_precip, evt_strike
    wind_debug, light_debug, rain_rebug
 
@@ -126,7 +142,7 @@ for --limit, possibilities are:
 * [Mosquitto MQTT Client Primer](#Mosquitto-MQTT-Client-Primer)
   * Subscribing to MQTT published topics
     * WeatherFlow MQTT topics
-* [Publishing to InfluxDB](#Publishing-to-influxdb)
+* [Publishing to InfluxDB / InfluxDB v2](#Publishing-to-influxdb)
 
 ---
 
@@ -323,7 +339,7 @@ pi@zero$ mosquitto_sub -t "wf/obs/#" -h mqtt
 <a name="#Publishing-to-influxdb"></a>
 ## Publishing to InfluxDB
 
-It is also possible to publish directly to a influxdb database
+It is also possible to publish directly to a InfluxDB or InfluxDB v2 database
 
 
 ### Example usage:
@@ -342,7 +358,7 @@ nohup python3 listen.py --influxdb --influxdb_host=influxdb --influxdb_port=8086
 Initially it might make sense to add the -n (no_pub) flag to see is being published, to aid in you writing queries or grafana dashboards versus your influxdb data.  Remember, however, that the -n flag writes to stdout, so you'd want to run the command in the foreground.
 
 ```
-# see with it 'would' publish, but do not actually publish anything
+# see if it 'would' publish, but do not actually publish anything
 # (this will need two control-C to kill the process)
 
 # you might want to also add -v to see the reporter and listener threads
@@ -350,3 +366,11 @@ Initially it might make sense to add the -n (no_pub) flag to see is being publis
 python3 listen.py --influxdb --influxdb_host=influxdb --influxdb_port=8086  --influxdb_db=testdb -M -n
 
 ```
+
+For InfluxDB API Version 2 (including v1.8 with v2 compatibility API), a different python library is used, *so different parameters are required.*  API version 2 requires token-based authentication.
+
+```
+python3 listen.py --influxdb2 --influxdb2_url "http://influxdb:8086/" --influxdb2_org testorg --influxdb2_bucket testbucket --influxdb2_token "SOMETOKEN" -M -n
+
+```
+
