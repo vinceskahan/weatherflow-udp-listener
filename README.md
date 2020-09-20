@@ -367,7 +367,7 @@ python3 listen.py --influxdb --influxdb_host=influxdb --influxdb_port=8086  --in
 
 ```
 
-For InfluxDB API Version 2 (including v1.8 with v2 compatibility API), a different python library is used, *so different parameters are required.*  API version 2 requires token-based authentication.
+For InfluxDB API Version 2 (including v1.8 with v2 compatibility API), a [different python library](https://github.com/influxdata/influxdb-client-python) is used, *so different parameters are required.*  API version 2 requires token-based authentication.
 
 ```
 python3 listen.py --influxdb2 --influxdb2_url "http://influxdb:8086/" --influxdb2_org testorg --influxdb2_bucket testbucket --influxdb2_token "SOMETOKEN" -M -n
