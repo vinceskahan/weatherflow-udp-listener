@@ -11,6 +11,12 @@ This is a quick listener for the WeatherFlow UDP broadcasts that can:
 
 NOTE - This is tested using v119 of the WeatherFlow hub firmware.
 
+### IMPORTANT SUPPORT INFORMATION
+
+As of September 1, 2020 - I no longer have any WeatherFlow gear and can't test anything.  I'll leave this repo up for the forseeable future, but it is extremely unlikely that I will work any bugs or feature requests or merge any PR.   Feel free to identify things here and provide PR so others can find them, but it's very unlikely I'll pick this up much in the forseeable future.  Thanks.
+
+----
+
 ### IMPORTANT NOTE ABOUT WEATHERFLOW UDP BROADCAST DATA
 
 It is important to understand your reasonable expectations regarding this software working via listening to the local UDP broadcasts of observations and events emitted by the Hub.  The following are limitations of the WeatherFlow gear itself and how it is implemented by the vendor.
