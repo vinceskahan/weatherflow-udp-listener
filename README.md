@@ -69,6 +69,8 @@ On a debian(ish) system that can be done by:
 ```
 # for python3
 sudo apt-get install -y python3-pip && sudo pip3 install paho-mqtt influxdb
+or....
+sudo apt-get install -y python3-paho-mqtt python3-influxdb
 
 # for python2
 sudo apt-get install -y python-pip  && sudo pip  install paho-mqtt influxdb
