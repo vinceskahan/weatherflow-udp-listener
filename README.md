@@ -1,3 +1,6 @@
+# DEPRECATED REPO
+This repo is read-only as of 2023-0127 - please see my https://github.com/vinceskahan/wfudptools repo - this repo is left read/only so folks can find any old PR that might still work with the refactored combined listener/simulator tools.
+
 ## Description
 
 This is a quick listener for the WeatherFlow UDP broadcasts that can:
